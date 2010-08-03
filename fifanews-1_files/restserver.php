@@ -1,0 +1,1 @@
+fb_sharepro_render([{"url":"http:\/\/www.fifa.com\/worldcup\/news\/news.html","share_count":298,"like_count":72,"comment_count":63,"total_count":433,"click_count":0,"normalized_url":"http:\/\/www.fifa.com\/worldcup\/news\/news.html"}]);
