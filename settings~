@@ -1,10 +1,10 @@
 #
 #Tue Aug 03 00:09:16 SGT 2010
 #iniesta
-url1=file:///home/shawn/workspace/ParcelsProcessor/fifanews-1.html
-xpath=//div[@id='bodyContent']/div[1]/div[2]/div[1]/ul/li[contains(concat(' ',@class,' '),' ')]/h3[1]/a[1]
+url1=http://www.digg.com
+xpath=//div[@id='wrapper']/div[1]/div[contains(concat(' ',@class,' '),' news-summary ')]/div[contains(concat(' ',@class,' '),' news-body ')]/h3[1]/a[contains(concat(' ',@class,' '),' offsite ')]
 #mueller
-url2=file:///home/shawn/workspace/ParcelsProcessor/fifanews-2.html
+url2=http://www.digg.com/page2
 
 
 

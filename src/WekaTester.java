@@ -2,21 +2,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
-import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
-import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.trees.J48;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.filters.unsupervised.attribute.StringToNominal;
 
 
 public class WekaTester {
-	final private static String SUNNY = "sunny";
 	final private static String OVERCAST = "overcast";
 	final private static String RAINY = "rainy";
+	final private static String SUNNY = "sunny";
 	
 	public static void main(String[] args) {
 		String T = Boolean.TRUE.toString();

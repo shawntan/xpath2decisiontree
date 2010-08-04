@@ -12,21 +12,31 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 
 import processes.TaskScheduler;
-
-import database.Database;
-
 import beans.Page;
 
 public class PeriodicDownload extends DownloadPage implements ScheduledTask{
 
 
 
-	private long intervalInSeconds;
-	private static int scheduledPages;
 	private static QueryRunner queryRunner;
-
+	private static int scheduledPages;
 	public static void main(String[] args) {
 		PeriodicDownload.startInitialDownloads(10);
+	}
+
+	private static void schedulePage(Page p,PeriodicDownload task) {
+		if(task==null) task = new PeriodicDownload(p, queryRunner);
+		Calendar nextUpdateTime = Calendar.getInstance();
+		nextUpdateTime.setTime(p.getUpdatedAt());
+		nextUpdateTime.add(Calendar.DATE, 1);
+		Calendar now = Calendar.getInstance();
+		long timeToDL = (nextUpdateTime.getTimeInMillis()-now.getTimeInMillis())/1000L;
+		System.out.println(timeToDL);
+		TaskScheduler.getInstance().scheduleTask(
+				task,
+				timeToDL
+		);
+
 	}
 	public static void startInitialDownloads(int scheduledPages){
 		PeriodicDownload.scheduledPages = scheduledPages;
@@ -48,20 +58,7 @@ public class PeriodicDownload extends DownloadPage implements ScheduledTask{
 			e.printStackTrace();
 		} 
 	}
-	private static void schedulePage(Page p,PeriodicDownload task) {
-		if(task==null) task = new PeriodicDownload(p, queryRunner);
-		Calendar nextUpdateTime = Calendar.getInstance();
-		nextUpdateTime.setTime(p.getUpdatedAt());
-		nextUpdateTime.add(Calendar.DATE, 1);
-		Calendar now = Calendar.getInstance();
-		long timeToDL = (nextUpdateTime.getTimeInMillis()-now.getTimeInMillis())/1000L;
-		System.out.println(timeToDL);
-		TaskScheduler.getInstance().scheduleTask(
-				task,
-				timeToDL
-		);
-
-	}
+	private long intervalInSeconds;
 
 
 	public PeriodicDownload(Page page, QueryRunner queryRunner) {
@@ -69,6 +66,13 @@ public class PeriodicDownload extends DownloadPage implements ScheduledTask{
 		// TODO Auto-generated constructor stub
 	}
 
+	@Override
+	public long getSecondsToTask() {
+		// TODO Auto-generated method stub
+		return intervalInSeconds;
+	}
+
+	@Override
 	public void run () {
 		super.run();
 		try {
@@ -82,12 +86,6 @@ public class PeriodicDownload extends DownloadPage implements ScheduledTask{
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-	}
-
-	@Override
-	public long getSecondsToTask() {
-		// TODO Auto-generated method stub
-		return intervalInSeconds;
 	}
 
 

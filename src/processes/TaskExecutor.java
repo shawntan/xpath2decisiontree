@@ -10,21 +10,21 @@ import processes.tasks.Task;
 
 public class TaskExecutor {
 	private static TaskExecutor taskExecutor;
-	private ThreadPoolExecutor threadPool;
-	private BlockingQueue<Runnable> queue;
-	private int poolSize;
-    private int maxPoolSize;
-    private long keepAliveTime;
-    
-    public static TaskExecutor getInstance(int poolSize, int maxPoolSize, long keepAliveTime) {
+	public static TaskExecutor getInstance(){
+    	return getInstance(3,5,1000L);
+    }
+	public static TaskExecutor getInstance(int poolSize, int maxPoolSize, long keepAliveTime) {
     	if(taskExecutor==null) {
     		taskExecutor = new TaskExecutor(poolSize, maxPoolSize, keepAliveTime);
     	}
     	return taskExecutor;
     }
-    public static TaskExecutor getInstance(){
-    	return getInstance(3,5,1000L);
-    }
+	private long keepAliveTime;
+    private int maxPoolSize;
+    private int poolSize;
+    
+    private BlockingQueue<Runnable> queue;
+    private ThreadPoolExecutor threadPool;
   
     private TaskExecutor(int poolSize, int maxPoolSize, long keepAliveTime) {
 		super();

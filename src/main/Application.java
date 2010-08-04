@@ -14,44 +14,37 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbutils.QueryRunner;
 
+import processes.TaskExecutor;
+import processes.TaskScheduler;
+import processes.tasks.PeriodicDownload;
+
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
 import com.gargoylesoftware.htmlunit.SilentCssErrorHandler;
 import com.gargoylesoftware.htmlunit.WaitingRefreshHandler;
 import com.gargoylesoftware.htmlunit.WebClient;
 
-import processes.TaskExecutor;
-import processes.TaskScheduler;
-import processes.tasks.PeriodicDownload;
-
-
 import database.Database;
 
 
 public class Application {
-	final private static String SETTINGS_FILE="settings.properties";
-	final private static String DATABASE_NAME = "databaseName";
 	final private static String DATABASE_HOST = "databaseHost";
+	final private static String DATABASE_NAME = "databaseName";
+	final private static String DATABASE_PASS = "databasePass";
 	final private static String DATABASE_PORT = "databasePort";
 	final private static String DATABASE_USER = "databaseUser";
-	final private static String DATABASE_PASS = "databasePass";
-	final private static String THREAD_POOL_SIZE = "threadPoolSize";
-	final private static String HTTP_SERVER_PORT = "httpServerPort";
-	
-	private static Properties settings;
 	private static DataSource dataSource;
-	private static QueryRunner queryRunner;
-	private static TaskExecutor taskExecutor;
+	final private static String HTTP_SERVER_PORT = "httpServerPort";
 	private static HttpServer httpServer;
+	
+	private static QueryRunner queryRunner;
+	private static Properties settings;
+	final private static String SETTINGS_FILE="settings.properties";
+	private static TaskExecutor taskExecutor;
 	private static TaskScheduler taskScheduler;
+	final private static String THREAD_POOL_SIZE = "threadPoolSize";
 	private static WebClient webClient;
 	
-	public static QueryRunner getQueryRunner() {
-		if(queryRunner == null) {
-			queryRunner = new QueryRunner(getDataSource());
-		}
-		return queryRunner;
-	}
 	public static DataSource getDataSource() {
 		if(dataSource == null) {
 			try {
@@ -72,11 +65,26 @@ public class Application {
 		}
 		return dataSource;
 	}
+	public static QueryRunner getQueryRunner() {
+		if(queryRunner == null) {
+			queryRunner = new QueryRunner(getDataSource());
+		}
+		return queryRunner;
+	}
 	public static WebClient getWebClient() {
 		if(webClient==null) {
 			initializeClient();
 		}
 		return webClient;
+	}
+	private static void initializeClient() {
+		webClient = new WebClient(BrowserVersion.FIREFOX_3);
+		webClient.setAjaxController(new NicelyResynchronizingAjaxController());
+		webClient.setJavaScriptEnabled(false);
+		webClient.setRefreshHandler(new WaitingRefreshHandler());
+		webClient.setCssErrorHandler(new SilentCssErrorHandler());
+		webClient.setJavaScriptTimeout(3000);
+		webClient.setTimeout(10000);
 	}
 	private static void loadSettings() {
 		settings = new Properties();
@@ -90,14 +98,12 @@ public class Application {
 			System.out.println(e.getMessage());
 		}
 	}
-	private static void initializeClient() {
-		webClient = new WebClient(BrowserVersion.FIREFOX_3);
-		webClient.setAjaxController(new NicelyResynchronizingAjaxController());
-		webClient.setJavaScriptEnabled(false);
-		webClient.setRefreshHandler(new WaitingRefreshHandler());
-		webClient.setCssErrorHandler(new SilentCssErrorHandler());
-		webClient.setJavaScriptTimeout(3000);
-		webClient.setTimeout(10000);
+	public static void main(String[] args) throws SQLException {
+		loadSettings();
+		startTaskDispatcher();
+		startHttpServer();
+		startScheduledTasks();
+		saveSettings();
 	}
 	private static void saveSettings() {
 		File settingsFile;
@@ -110,9 +116,6 @@ public class Application {
 			e.printStackTrace();
 		}
 	}
-	private static void startTaskDispatcher() {
-		taskExecutor = TaskExecutor.getInstance(5,5,1000L);
-	}
 	private static void startHttpServer() {
 		httpServer = new HttpServer(Integer.parseInt(settings.getProperty(HTTP_SERVER_PORT)),"controllers");
 	}
@@ -121,11 +124,7 @@ public class Application {
 		PeriodicDownload.startInitialDownloads(1);
 	}
 	
-	public static void main(String[] args) throws SQLException {
-		loadSettings();
-		startTaskDispatcher();
-		startHttpServer();
-		startScheduledTasks();
-		saveSettings();
+	private static void startTaskDispatcher() {
+		taskExecutor = TaskExecutor.getInstance(5,5,1000L);
 	}
 }

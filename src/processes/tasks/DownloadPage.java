@@ -13,14 +13,13 @@ import main.Application;
 
 import org.apache.commons.dbutils.QueryRunner;
 
+import beans.Page;
+
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.ScriptException;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-
-
-import beans.Page;
 
 public class DownloadPage  implements Task{
 	private static List<String> failures = new LinkedList<String>();
@@ -33,12 +32,66 @@ public class DownloadPage  implements Task{
 	public DownloadPage(Page page,QueryRunner queryRunner) {
 		init(page, queryRunner);
 	}
+	@Override
+	public Task getFollowUpActions() {
+		return new Task() {
+			@Override
+			public Task getFollowUpActions() {return null;}
+			@Override
+			public boolean isSuccessful() {
+				return true;
+			}
+
+			@Override
+			public void run() {
+				DownloadPage.failures.add(page.getUrl());
+			}
+		};
+	}
+
+
+	private HtmlPage getPage(String url) throws FailingHttpStatusCodeException, MalformedURLException, IOException{
+		HtmlPage page = null;
+		try{
+			page = client.getPage(url);
+		} catch(ScriptException e){
+			System.out.println("Script ERROR!!");
+			page = null;
+		}
+		return page;
+	}
+
+	public HtmlPage getPageWithFullUrl(String url) throws FailingHttpStatusCodeException, MalformedURLException, IOException{ 
+		HtmlPage page = getPage(url);
+		System.out.println("\tAltering URLs...");
+		processUrls(page);
+		return page;
+	}
+
 	private void init(Page page,QueryRunner queryRunner) {
 		client = Application.getWebClient();
 		this.page = page;
 		this.queryRunner = queryRunner;
 	}
+	@Override
+	public boolean isSuccessful() {
+		return successful;
+	}
+	private void makeAttributeFullyQualified(HtmlPage page,List<HtmlElement> list,String attributeName) {
+		for(HtmlElement n: list){
+			try {
+				n.setAttribute(attributeName, page.getFullyQualifiedUrl(n.getAttribute(attributeName)).toString());
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
 
+	public void processUrls(HtmlPage page) {
+		makeAttributeFullyQualified(page, (List<HtmlElement>)page.getByXPath("//*[@src]"), "src");
+		makeAttributeFullyQualified(page, (List<HtmlElement>)page.getByXPath("//*[@href]"), "href");
+	}
 
 	@Override
 	public void run() {
@@ -87,58 +140,6 @@ public class DownloadPage  implements Task{
 
 			successful = true;
 
-	}
-
-	private HtmlPage getPage(String url) throws FailingHttpStatusCodeException, MalformedURLException, IOException{
-		HtmlPage page = null;
-		try{
-			page = client.getPage(url);
-		} catch(ScriptException e){
-			System.out.println("Script ERROR!!");
-			page = null;
-		}
-		return page;
-	}
-
-	private void makeAttributeFullyQualified(HtmlPage page,List<HtmlElement> list,String attributeName) {
-		for(HtmlElement n: list){
-			try {
-				n.setAttribute(attributeName, page.getFullyQualifiedUrl(n.getAttribute(attributeName)).toString());
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
-	public HtmlPage getPageWithFullUrl(String url) throws FailingHttpStatusCodeException, MalformedURLException, IOException{ 
-		HtmlPage page = getPage(url);
-		System.out.println("\tAltering URLs...");
-		processUrls(page);
-		return page;
-	}
-	public void processUrls(HtmlPage page) {
-		makeAttributeFullyQualified(page, (List<HtmlElement>)page.getByXPath("//*[@src]"), "src");
-		makeAttributeFullyQualified(page, (List<HtmlElement>)page.getByXPath("//*[@href]"), "href");
-	}
-
-	@Override
-	public boolean isSuccessful() {
-		return successful;
-	}
-
-	@Override
-	public Task getFollowUpActions() {
-		return new Task() {
-			public void run() {
-				DownloadPage.failures.add(page.getUrl());
-			}
-			public boolean isSuccessful() {
-				return true;
-			}
-
-			@Override
-			public Task getFollowUpActions() {return null;}
-		};
 	}
 
 

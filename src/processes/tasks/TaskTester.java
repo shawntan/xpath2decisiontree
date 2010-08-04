@@ -9,15 +9,10 @@ public class TaskTester implements Task{
 		TaskTester.count++;
 	}
 	
-	public void run() {
-		System.out.println("TaskTester "+id +" RUNNING!");
-		try {
-			Thread.sleep((int)Math.random()*2000*5);
-			System.out.println("TaskTester done!");
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	@Override
+	public Task getFollowUpActions() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override
@@ -27,9 +22,15 @@ public class TaskTester implements Task{
 	}
 
 	@Override
-	public Task getFollowUpActions() {
-		// TODO Auto-generated method stub
-		return null;
+	public void run() {
+		System.out.println("TaskTester "+id +" RUNNING!");
+		try {
+			Thread.sleep((int)Math.random()*2000*5);
+			System.out.println("TaskTester done!");
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }

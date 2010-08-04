@@ -13,7 +13,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.simpleframework.http.Query;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 import org.simpleframework.http.core.Container;
@@ -21,12 +20,15 @@ import org.simpleframework.transport.connect.Connection;
 import org.simpleframework.transport.connect.SocketConnection;
 
 public class HttpServer implements Container{
-	private int port;
-	private String controllerPackage;
-
+	public static void main(String[] args) {
+		new HttpServer(8080,"controllers");
+	}
 	private Map<String,Method> actionsMap;
+
+	private String controllerPackage;
 	private Map<String,Object> instanceMap;
 
+	private int port;
 	public HttpServer(int port, String controllerPackage) {
 		super();
 		this.port = port;
@@ -45,42 +47,6 @@ public class HttpServer implements Container{
 			e.printStackTrace();
 		}
 	}
-	public int getPort() {
-		return port;
-	}
-	public String getControllerPackage() {
-		return controllerPackage;
-	}
-
-	private void startHttpServer() throws IOException {
-		Connection connection = new SocketConnection(this);
-		SocketAddress address = new InetSocketAddress(getPort());
-		connection.connect(address);
-		System.out.println("Httpserver started.");
-	}
-
-	/**
-	 * Scans all classes accessible from the context class loader which belong to the given package and subpackages.
-	 *
-	 * @param packageName The base package
-	 * @return The classes
-	 * @throws ClassNotFoundException
-	 * @throws IOException
-	 */
-	@SuppressWarnings("unchecked")
-	private void loadClasses(String packageName) throws ClassNotFoundException, IOException {
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		assert classLoader != null;
-		String path = packageName.replace('.', '/');
-		Enumeration<URL> resources = classLoader.getResources(path);
-		while (resources.hasMoreElements()) {
-			URL resource = resources.nextElement();
-			String fileName = resource.getFile();
-			String fileNameDecoded = URLDecoder.decode(fileName, "UTF-8");;
-			findClasses(new File(fileNameDecoded),packageName,"");
-		}
-	}
-
 	/**
 	 * Recursive method used to find all classes in a given directory and subdirs.
 	 *
@@ -132,17 +98,15 @@ public class HttpServer implements Container{
 			}
 		}
 	}
-	private boolean isValidAction(Method m) {
-		Class[] parameters = m.getParameterTypes();
-		
-		return  parameters.length == 2 &&
-				parameters[0].equals(Map.class) &&
-				parameters[1].equals(PrintStream.class) &&
-				m.getDeclaringClass()!=Object.class;
+
+	public String getControllerPackage() {
+		return controllerPackage;
 	}
-	public static void main(String[] args) {
-		new HttpServer(8080,"controllers");
+
+	public int getPort() {
+		return port;
 	}
+
 	@Override
 	public void handle(Request request, Response response) {
 		try {
@@ -180,5 +144,40 @@ public class HttpServer implements Container{
 			} catch (IOException e) {
 			}
 		}
+	}
+	private boolean isValidAction(Method m) {
+		Class[] parameters = m.getParameterTypes();
+		
+		return  parameters.length == 2 &&
+				parameters[0].equals(Map.class) &&
+				parameters[1].equals(PrintStream.class) &&
+				m.getDeclaringClass()!=Object.class;
+	}
+	/**
+	 * Scans all classes accessible from the context class loader which belong to the given package and subpackages.
+	 *
+	 * @param packageName The base package
+	 * @return The classes
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 */
+	@SuppressWarnings("unchecked")
+	private void loadClasses(String packageName) throws ClassNotFoundException, IOException {
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		assert classLoader != null;
+		String path = packageName.replace('.', '/');
+		Enumeration<URL> resources = classLoader.getResources(path);
+		while (resources.hasMoreElements()) {
+			URL resource = resources.nextElement();
+			String fileName = resource.getFile();
+			String fileNameDecoded = URLDecoder.decode(fileName, "UTF-8");;
+			findClasses(new File(fileNameDecoded),packageName,"");
+		}
+	}
+	private void startHttpServer() throws IOException {
+		Connection connection = new SocketConnection(this);
+		SocketAddress address = new InetSocketAddress(getPort());
+		connection.connect(address);
+		System.out.println("Httpserver started.");
 	}
 }
