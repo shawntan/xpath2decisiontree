@@ -18,6 +18,7 @@ import org.apache.commons.dbutils.handlers.BeanListHandler;
 
 import processes.TaskExecutor;
 import processes.tasks.DownloadPage;
+import processes.tasks.PeriodicDownload;
 import beans.Page;
 
 public class Cacher {
@@ -30,6 +31,9 @@ public class Cacher {
 		BasicDataSource bds = (BasicDataSource)Application.getDataSource();
 		out.println("Active: "+bds.getNumActive());
 		out.println("Idle: "+bds.getNumIdle());
+	}
+	public void dlqueue(Map<String,String> request,PrintStream out) {
+		PeriodicDownload.printDownloadQueue(out);
 	}
 	public void display(Map<String,String> request, PrintStream out) {
 		QueryRunner run = new QueryRunner(Application.getDataSource());

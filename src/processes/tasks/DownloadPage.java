@@ -4,6 +4,7 @@ package processes.tasks;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.MalformedURLException;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedList;
@@ -11,6 +12,7 @@ import java.util.List;
 
 import main.Application;
 
+import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 
 import beans.Page;
@@ -35,14 +37,10 @@ public class DownloadPage  implements Task{
 	@Override
 	public Task getFollowUpActions() {
 		return new Task() {
-			@Override
 			public Task getFollowUpActions() {return null;}
-			@Override
 			public boolean isSuccessful() {
 				return true;
 			}
-
-			@Override
 			public void run() {
 				DownloadPage.failures.add(page.getUrl());
 			}
@@ -63,7 +61,7 @@ public class DownloadPage  implements Task{
 
 	public HtmlPage getPageWithFullUrl(String url) throws FailingHttpStatusCodeException, MalformedURLException, IOException{ 
 		HtmlPage page = getPage(url);
-		System.out.println("\tAltering URLs...");
+		//System.out.println("\tAltering URLs...");
 		processUrls(page);
 		return page;
 	}
@@ -82,7 +80,6 @@ public class DownloadPage  implements Task{
 			try {
 				n.setAttribute(attributeName, page.getFullyQualifiedUrl(n.getAttribute(attributeName)).toString());
 			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -95,50 +92,53 @@ public class DownloadPage  implements Task{
 
 	@Override
 	public void run() {
+		Connection conn = null;
 		try {
-			System.out.println("\tDownloading...");
+			conn = Application.getDataSource().getConnection();
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		try {
+			System.out.println("Downloading..."+page.getUrl());
 			HtmlPage htmlPage=null;
 			try {
 				htmlPage = getPageWithFullUrl(page.getUrl());
-				System.out.println("\tDone downloading.");
+				//System.out.println("\tDone downloading.");
 			}catch (FailingHttpStatusCodeException e) {
-				System.out.println("HTTP failure code.");
+				//System.out.println("HTTP failure code.");
 			} catch (MalformedURLException e) {
 				System.out.println("Malformed URL.");
 			} catch (IOException e) {
-				System.out.println("Download error.");
+				//System.out.println("Download error.");
 				//System.out.println(e.getMessage());
 			}
+
 			if(htmlPage != null) {
-				queryRunner.update(
-						"INSERT INTO revisions (html,page_id,created_at,updated_at) values (?,?,NOW(),NOW())",
-						htmlPage.asXml(),
-						page.getId()
+				PreparedStatement ps = conn.prepareStatement(
+						"INSERT INTO revisions (html,page_id,created_at,updated_at) values (?,?,NOW(),NOW())"
 				);
-				PreparedStatement ps = Application
-				.getDataSource()
-				.getConnection()
-				.prepareStatement("INSERT INTO revisions (html,page_id,created_at,updated_at) values (?,?,NOW(),NOW())");
 				ps.setCharacterStream(1,new StringReader(htmlPage.asXml()));
 				ps.setInt(2, page.getId());
+				//System.out.println("\tWriting into DB...");
 				ps.execute();
 			}
 		} catch (SQLException e) {
-			System.out.println("Database insert error");
-			System.out.println(e.getMessage());
 		}
-			try {
-				queryRunner.update(
-						"UPDATE pages SET updated_at = NOW() WHERE pages.id = ?",
-						page.getId()
+		try {
+			queryRunner.update(
+					conn,
+					"UPDATE pages SET updated_at = NOW() WHERE id = ?",
+					page.getId()
 				);
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			System.out.println("UPDATED TIMESTAMP!!!");
+			DbUtils.close(conn);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
-			successful = true;
+
+		successful = true;
 
 	}
 

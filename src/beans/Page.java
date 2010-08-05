@@ -32,4 +32,9 @@ public class Page {
 	public void setUrl(String url) {
 		this.url = url;
 	}
+	@Override
+	public String toString() {
+		// TODO Auto-generated method stub
+		return getUrl();
+	}
 }
