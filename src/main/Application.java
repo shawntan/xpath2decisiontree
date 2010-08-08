@@ -121,7 +121,7 @@ public class Application {
 	}
 	private static void startScheduledTasks() {
 		taskScheduler = TaskScheduler.getInstance(1);
-		PeriodicDownload.startInitialDownloads(5);
+		PeriodicDownload.startInitialDownloads();
 	}
 	private static void startTaskDispatcher() {
 		taskExecutor = TaskExecutor.getInstance(5,5,1000L);

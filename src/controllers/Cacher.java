@@ -32,9 +32,6 @@ public class Cacher {
 		out.println("Active: "+bds.getNumActive());
 		out.println("Idle: "+bds.getNumIdle());
 	}
-	public void dlqueue(Map<String,String> request,PrintStream out) {
-		PeriodicDownload.printDownloadQueue(out);
-	}
 	public void display(Map<String,String> request, PrintStream out) {
 		QueryRunner run = new QueryRunner(Application.getDataSource());
 		try {
@@ -76,6 +73,7 @@ public class Cacher {
 	}
 	public void force(Map<String,String> request, PrintStream out) {
 		QueryRunner queryRunner = Application.getQueryRunner();
+		
 		try {
 			int id = Integer.parseInt(request.get("id"));
 			List<Page> pages = queryRunner.query(

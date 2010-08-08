@@ -22,6 +22,7 @@ public class Database {
 		}
 		return instance;
 	}
+	
 	private String host;
 	private PrintWriter logWriter;
 	private String password;

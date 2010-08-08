@@ -1,101 +1,107 @@
 package processes.tasks;
 
-import java.io.PrintStream;
+
+
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Calendar;
-import java.util.Deque;
-import java.util.LinkedList;
+import java.util.Date;
 import java.util.List;
+
 import main.Application;
+
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
+
 import processes.TaskScheduler;
 import beans.Page;
 
 public class PeriodicDownload extends DownloadPage implements ScheduledTask{
-	private static int simultaneous;
 	private static QueryRunner queryRunner;
-	private static Deque<Page> pageDownloadQueue;
 	private static BeanListHandler<Page> beanListHandler = new BeanListHandler<Page>(Page.class);
+	private static Connection con;
+	private static int previousId=0;
 
-	private void scheduleSelf() {
-		System.out.println("Scheduling "+page.getUrl()+" now...");
-		Calendar nextUpdateTime = Calendar.getInstance();
-		nextUpdateTime.setTime(page.getUpdatedAt());
-		nextUpdateTime.add(Calendar.MINUTE, 5);
-		Calendar now = Calendar.getInstance();
-		long timeToDL = (nextUpdateTime.getTimeInMillis()-now.getTimeInMillis())/1000L;
-		TaskScheduler.getInstance().scheduleTask(
-				this,
-				timeToDL
-		);
-		System.out.println("\t"+page.getUrl()+" scheduled to download in "+timeToDL+" seconds.");
+	public static void startInitialDownloads() {
+		try {
+			con = Application.getDataSource().getConnection();
+			queryRunner = Application.getQueryRunner();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		scheduleNextPage();
+
 	}
-	public static void startInitialDownloads(int scheduledPages){
-		PeriodicDownload.simultaneous = scheduledPages;
-		PeriodicDownload.queryRunner = Application.getQueryRunner();
-		pageDownloadQueue = new LinkedList<Page>();
-		List<Page> oldestPages = addOldestPagesToQueue(5);
-		for(Page page:oldestPages){
-			new PeriodicDownload(page,queryRunner);
+
+	private static void scheduleNextPage() {
+		synchronized(con){
+			try {
+				
+				List<Page >oldestPages = queryRunner.query(
+						con,
+						"SELECT id,url,next_update AS nextUpdate FROM pages ORDER BY next_update LIMIT 1",
+						beanListHandler
+				);
+				Page page = oldestPages.get(0);
+				Calendar cal = Calendar.getInstance();
+				long now = cal.getTimeInMillis();
+				cal.setTime(page.getNextUpdate());
+				long later = cal.getTimeInMillis();
+				long timeInSeconds = (later-now)/1000L;
+				TaskScheduler.getInstance().scheduleTask(
+						new PeriodicDownload(page, queryRunner),
+						timeInSeconds
+				);
+				System.out.println("Next download is: "+page.getUrl()+" to be done at "+page.getNextUpdate());
+				updateTimestamp(page);
+				
+				//debug
+				if(page.getId()==previousId) {
+					System.out.println("[DUPLICATE!]");
+				}
+				previousId = page.getId();
+
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 	}
-	private synchronized static List<Page> addOldestPagesToQueue(int n){
-		List<Page> oldestPages = null;
+	@Override
+	public void run() {
+		PeriodicDownload.scheduleNextPage();
+		super.run();
+	}
+
+	private synchronized static void updateTimestamp(Page page){
+		Calendar nextUpdateTime = Calendar.getInstance();
+		nextUpdateTime.setTime(page.getNextUpdate());
+		Calendar now = Calendar.getInstance();
+		Calendar temp = Calendar.getInstance();
+		temp.setTime(page.getNextUpdate());
+		boolean needsUpdating = false;
+		while(!(temp.after(now) && temp.after(nextUpdateTime))){
+			temp.add(Calendar.HOUR,1);
+			needsUpdating = true;
+		}
+		Date nextUpdate = temp.getTime();
 		try {
-			if(!pageDownloadQueue.isEmpty()) {
-				System.out.println("\tLatest queue item is: "+pageDownloadQueue.peekLast().getUpdatedAt());
-				oldestPages = queryRunner.query(
-						"SELECT id,url,updated_at AS updatedAt FROM pages WHERE updated_at > ? ORDER BY updated_at LIMIT ? ",
-						beanListHandler,
-						pageDownloadQueue.peekLast().getUpdatedAt(),
-						n
-				);
-			}
-			else {
-				n = Math.max(n,simultaneous);
-				System.out.println("\tNo queue items found. Getting oldest.");
-				oldestPages = queryRunner.query(
-						"SELECT id,url,updated_at AS updatedAt FROM pages ORDER BY updated_at LIMIT ?",
-						beanListHandler,
-						n
-				);
-			}
-			for(Page p:oldestPages)	{
-				pageDownloadQueue.add(p);
-				System.out.println("\t"+p.getUrl()+" added to download queue. Last updated at: "+p.getUpdatedAt());
-			}
-			return oldestPages;
+			queryRunner.update(
+					con,
+					"UPDATE pages SET next_update = ? WHERE id = ?",
+					nextUpdate,
+					page.getId()
+			);
+			System.out.println("After that, download for: "+page.getUrl()+" scheduled at: "+nextUpdate);
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return null;
 		}
-	}
-	private synchronized static Page getNextPageInQueue(Page page){
-		pageDownloadQueue.remove(page);
-		List<Page> pageList = addOldestPagesToQueue(1);
-		Page p=null;
-		if(pageList == null || pageList.isEmpty()) System.out.println("\tNo new pages. All up to date");
-		else {
-			p = pageList.get(0);
-		}
-		return p;
-	}
-	public static void printDownloadQueue(PrintStream out) {
-		out.println("Printing....");
-		for(Page p:pageDownloadQueue) {
-			out.println(p.getUrl()+" "+p.getUpdatedAt());
-		}
+
 	}
 
 	public PeriodicDownload(Page page, QueryRunner queryRunner) {
 		super(page, queryRunner);
-		scheduleSelf();
-	}
-	public void run () {
-		super.run();
-		this.page = PeriodicDownload.getNextPageInQueue(this.page);
-		scheduleSelf();
+		// TODO Auto-generated constructor stub
 	}
 	@Override
 	public long getSecondsToTask() {

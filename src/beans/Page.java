@@ -8,6 +8,14 @@ public class Page {
 	private String title;
 	private Date updatedAt;
 	private String url;
+	private Date nextUpdate;
+	
+	public Date getNextUpdate() {
+		return nextUpdate;
+	}
+	public void setNextUpdate(Date nextUpdate) {
+		this.nextUpdate = nextUpdate;
+	}
 	public int getId() {
 		return id;
 	}
