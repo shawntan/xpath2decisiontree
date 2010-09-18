@@ -1,4 +1,4 @@
-package processes.tasks;
+package processes.tasks.download;
 
 
 
@@ -14,6 +14,7 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 
 import processes.TaskScheduler;
+import processes.tasks.ScheduledTask;
 import beans.Page;
 
 public class PeriodicDownload extends DownloadPage implements ScheduledTask{
@@ -46,7 +47,12 @@ public class PeriodicDownload extends DownloadPage implements ScheduledTask{
 				Page page = oldestPages.get(0);
 				Calendar cal = Calendar.getInstance();
 				long now = cal.getTimeInMillis();
-				cal.setTime(page.getNextUpdate());
+				if(page.getNextUpdate()!=null) {
+					cal.setTime(page.getNextUpdate());
+				} else {
+					page.setNextUpdate(cal.getTime());
+				}
+				
 				long later = cal.getTimeInMillis();
 				long timeInSeconds = (later-now)/1000L;
 				TaskScheduler.getInstance().scheduleTask(
@@ -101,11 +107,9 @@ public class PeriodicDownload extends DownloadPage implements ScheduledTask{
 
 	public PeriodicDownload(Page page, QueryRunner queryRunner) {
 		super(page, queryRunner);
-		// TODO Auto-generated constructor stub
 	}
 	@Override
 	public long getSecondsToTask() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 }

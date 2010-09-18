@@ -17,8 +17,7 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 
 import processes.TaskExecutor;
-import processes.tasks.DownloadPage;
-import processes.tasks.PeriodicDownload;
+import processes.tasks.download.DownloadPage;
 import beans.Page;
 
 public class Cacher {

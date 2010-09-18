@@ -19,6 +19,10 @@ public class Content extends Extractor {
 		;
 		processText(targetText);
 		put("tag",target);
+		String name = target.getNodeName();
+		if(name.startsWith("h") && name.length()==2) {
+			put("header",true);
+		} else put("header",false);
 	}
 	private void processText(String text){
 		String[] tokens = text.split("\\s+");
@@ -45,7 +49,8 @@ public class Content extends Extractor {
 				prev = (Integer)prev + 1;
 			}
 			put(key,prev);
-
+			put("endswithcolon",text.endsWith(":"));
+			put("endswithdash",text.endsWith("-"));
 		}
 
 	}

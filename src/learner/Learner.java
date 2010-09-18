@@ -5,6 +5,7 @@ import java.util.List;
 
 import learner.data.AttributeValues;
 import learner.data.LearnerData;
+import weka.classifiers.bayes.BayesNet;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.trees.J48;
 import weka.core.Instances;
@@ -41,5 +42,9 @@ public class Learner {
 	public void feedTrainingData(HtmlPage page, String xpath) {
 		if(extractedDataMaps == null) extractedDataMaps = new LinkedList<LearnerData>();
 		featureExtractor.extractFromHtmlPage(extractedDataMaps,page, xpath);
+	}
+
+	public AttributeValues getAttributeValues() {
+		return attributeValues;
 	}
 }

@@ -120,6 +120,7 @@ public class FeatureExtractor<T extends AbstractData>{
 	public void extractFromHtmlPage(List<T> extractedDataMaps,HtmlPage page,String xpath) {
 		classObj = (Class<T>)LearnerData.class;
 		List<DomNode> selected= (List<DomNode>)page.getByXPath(xpath);
+		System.out.println("Positive examples:"+selected.size());
 		DomNode body = page.getBody();
 		T data = (T)new LearnerData() {
 			@Override

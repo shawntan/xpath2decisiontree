@@ -1,4 +1,4 @@
-package processes.tasks;
+package processes.tasks.download;
 
 
 import java.io.IOException;
@@ -15,6 +15,8 @@ import main.Application;
 
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
+
+import processes.tasks.Task;
 
 import beans.Page;
 

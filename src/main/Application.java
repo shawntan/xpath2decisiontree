@@ -16,7 +16,7 @@ import org.apache.commons.dbutils.QueryRunner;
 
 import processes.TaskExecutor;
 import processes.TaskScheduler;
-import processes.tasks.PeriodicDownload;
+import processes.tasks.download.PeriodicDownload;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
@@ -72,12 +72,22 @@ public class Application {
 		return queryRunner;
 	}
 	public static WebClient getWebClient() {
-		if(webClient==null) {
-			initializeClient();
-		}
+		BrowserVersion version = new BrowserVersion(
+				"Netscape",
+				"5.0 (X11; U; Linux x86_64; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.470.0 Safari/534.3",
+				"Mozilla/5.0 (X11; U; Linux x86_64; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.470.0 Safari/534.3",
+				5.0f);
+		WebClient webClient = new WebClient(version);
+		webClient.setAjaxController(new NicelyResynchronizingAjaxController());
+		webClient.setJavaScriptEnabled(false);
+		webClient.setRefreshHandler(new WaitingRefreshHandler());
+		webClient.setCssErrorHandler(new SilentCssErrorHandler());
+		webClient.setJavaScriptTimeout(3000);
+		webClient.setTimeout(10000);
 		return webClient;
 	}
 	private static void initializeClient() {
+		
 		webClient = new WebClient(BrowserVersion.FIREFOX_3);
 		webClient.setAjaxController(new NicelyResynchronizingAjaxController());
 		webClient.setJavaScriptEnabled(false);
@@ -86,7 +96,7 @@ public class Application {
 		webClient.setJavaScriptTimeout(3000);
 		webClient.setTimeout(10000);
 	}
-	private static void loadSettings() {
+	public static void loadSettings() {
 		settings = new Properties();
 		File settingsFile;
 		try {
