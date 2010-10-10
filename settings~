@@ -1,8 +1,0 @@
-#
-##Tue Aug 03 00:09:16 SGT 2010
-#url1=file:///home/shawn/workspace/ParcelsProcessor/fifa1.html
-url1=http://www.fifa.com/worldcup/players/player=196748/index.html
-xpath=//div[@id='playerProfile']/div[2]/div[1]/div[2]/div[1]/ul[1]/li 
-url2=http://www.fifa.com/newscentre/news/index,page=2.htmx
-#(aptana > /dev/null &) &
-

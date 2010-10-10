@@ -1,6 +1,7 @@
 package spider;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
@@ -17,18 +18,21 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
-public class Crawler {
+public class Crawler implements Serializable {
 	WebClient client;
 	Queue<Page> downloadQueue;
 	Map<String,Page> visited;
+	Page entryPoint;
 	int depth;
 
+	boolean continueCrawl;
 	public Crawler() {
 		Application.loadSettings();
 		client = Application.getWebClient();
 		client.setTimeout(3000);
 		downloadQueue = new LinkedBlockingQueue<Page>();
-		visited = new TreeMap<String,Page>();
+		visited = new TreeMap<String,Page>(); 
+		continueCrawl = true;
 	}
 
 	public void crawl(String startUrl,int depth) throws MalformedURLException {
@@ -37,15 +41,20 @@ public class Crawler {
 		this.depth = depth;
 		visited.put(url.toString(),p);
 		downloadQueue.add(p);
+		entryPoint = p;
 		crawl();
 	}
 	private void crawl(){
 		while(!downloadQueue.isEmpty()){
-			Page p = downloadQueue.poll();
+			Page p = downloadQueue.poll(); 
 			try {
 				System.out.println("Links left:"+downloadQueue.size()+" Depth: "+p.getDepth() +" Downloading "+p.getUrl().toString());
-				HtmlPage htmlPage = client.getPage(p.getUrl());
-				if(p.getDepth() < this.depth) processPage(p,htmlPage, p.getDepth());
+
+				if(p.getDepth() < this.depth){
+					HtmlPage htmlPage = client.getPage(p.getUrl());
+					p.setHtmlPage(htmlPage);
+					processPage(p,htmlPage, p.getDepth());
+				}
 			} catch (FailingHttpStatusCodeException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -68,37 +77,57 @@ public class Crawler {
 			url = url.substring(0,index);
 			return page.getFullyQualifiedUrl(url);
 		}
-		
+
 	}
 
 	private void processPage(Page parentPage,HtmlPage htmlPage,int depth){
-		List<HtmlAnchor> links = htmlPage.getAnchors();
-		for(HtmlAnchor a: links){
-			try {
-				URL url = linkToUrl(a);
-				if(url.getHost().equals(parentPage.getUrl().getHost())){
-					Page page = visited.get(url.toString());
-					if(page==null){
-						page = new Page(url,depth+1);
-						downloadQueue.add(page);
-						visited.put(url.toString(), page);
+		if(continueCrawl) {
+			List<HtmlAnchor> links = htmlPage.getAnchors();
+			for(HtmlAnchor a: links){
+				try {
+					URL url = linkToUrl(a);
+					if(url.getHost().equals(parentPage.getUrl().getHost())){
+						Page page = visited.get(url.toString());
+						if(page==null){
+							page = new Page(url,depth+1);
+							downloadQueue.add(page);
+							visited.put(url.toString(), page);
+						}
+						page.addToIncomingLinks(parentPage);	
+						parentPage.addToOutgoingLinks(page);
 					}
-					page.addToIncomingLinks(parentPage);	
-					parentPage.addToOutgoingLinks(page);
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
 				}
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
-			} 
+			}
+			if(downloadQueue.size() > 100) continueCrawl = false;
 		}
+		/*
+		AttributeValues av = parentPage.getAttributeValues();
+		LinkedList<LearnerData> collected = new LinkedList<LearnerData>();
+		FeatureExtractor<LearnerData> extractor = new FeatureExtractor<LearnerData>(av);
+		extractor.extractFromHtmlPage(collected, htmlPage,
+			"//div[@id='mainContent']/div[1]/div[1]/ul/li/h3[1]/a[1]"
+		);
+		collected = null;
+		extractor = null;
+		Set<String> attSet = parentPage.getAttributeValues().keySet();
+		Set<String> entrySet = entryPoint.getAttributeValues().keySet();
+		HashSet<String> origSet = new HashSet<String>(entryPoint.getAttributeValues().keySet());
+		origSet.retainAll(attSet);
+		System.out.println(((double)origSet.size()/entrySet.size())*100);*/
 	}
 	public Page getMostIncomingLinks(){
 		Collection<Page> pages = visited.values();
 		Page highest = null;
 		for(Page p:pages){
-			if(highest==null || highest.getIncomingLinks().size()<p.getIncomingLinks().size())
+			if(highest==null || highest.getIncomingLinks().size() < p.getIncomingLinks().size())
 				highest = p;
 		}
 		return highest;
+	}
+	public Collection<Page> getPages() {
+		return visited.values();
 	}
 
 }

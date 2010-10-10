@@ -154,8 +154,8 @@ public class FeatureExtractor<T extends AbstractData>{
 					try {
 						instance.setValue(att, AttributeValues.stringify(value));
 					} catch (IllegalArgumentException e){
-						System.out.println("No such value ["+AttributeValues.stringify(value)+"] for "+att.name());
-						System.out.println("Moving along...");
+						//System.out.println("No such value ["+AttributeValues.stringify(value)+"] for "+att.name());
+						//System.out.println("Moving along...");
 					}
 					
 					count++;

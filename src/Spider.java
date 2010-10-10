@@ -1,106 +1,131 @@
+
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintStream;
 import java.net.MalformedURLException;
-import java.net.SocketTimeoutException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.LinkedList;
+import java.util.Collection;
 import java.util.List;
-import java.util.TreeSet;
 
-import spider.Crawler;
-import spider.Page;
+import learner.ClassifiedTask;
+import learner.ElementClassifier;
+import learner.Learner;
 
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
+import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
-import learner.Learner;
-import main.Application;
-
+import spider.Crawler;
+import spider.Page;
 
 public class Spider {
 
 	public static void main(String[] args) {
 		Crawler c = new Crawler();
 		try {
-			c.crawl("http://en.wikipedia.org/wiki/Artificial_intelligence",2);
-			Page p = c.getMostIncomingLinks();
-			System.out.println("Highest LINKS!: "+p.getUrl());
+
+			try {
+				ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File("save.file")));
+			} catch (Exception e) {
+				c.crawl("http://www.google.com.sg/search?q=in+my+skin",3);
+				try {
+					ObjectOutputStream objOut  = new ObjectOutputStream(new FileOutputStream(new File("save.file")));
+					objOut.writeObject(c);
+				} catch (FileNotFoundException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+
+			String xpath = "//div[@id='ires']/ol[1]/li[contains(concat(' ',@class,' '),' g ')]/h3[contains(concat(' ',@class,' '),' r ')]/a[contains(concat(' ',@class,' '),' l ')]";
+			Page popular = c.getMostIncomingLinks();
+			Collection<Page> pages = c.getPages();
+
+			System.out.println("Highest LINKS!: "+popular.getUrl());
+			Learner learner = new Learner();
+
+			Page samplePage = null;
+			int count = 0;
+			ElementClassifier classifier = null;
+			for(Page p: pages) {
+				HtmlPage htmlPage = p.getHtmlPage();
+				if(htmlPage!=null){
+					if(count <= 10 && !htmlPage.getByXPath(xpath).isEmpty()){
+						if(classifier== null) {
+							learner.feedTrainingData(htmlPage, xpath);
+							classifier = learner.createClassifier();
+						}
+						else {
+							HtmlPage sampleHtmlPage = htmlPage;
+							processUrls(sampleHtmlPage);			
+							HtmlElement head = sampleHtmlPage.getElementsByTagName("head").get(0);
+							HtmlElement style = sampleHtmlPage.createElement("link");
+							style.setAttribute("rel", "stylesheet");
+							style.setAttribute("type","text/css");
+							style.setAttribute("href", "./stylesheet.css");
+							head.appendChild(style);
+							classifier.classifyPageElements(htmlPage,
+							new ClassifiedTask() {
+								public void performTask(DomNode element) {
+									HtmlElement e = (HtmlElement) element;
+									e.setAttribute("class",e.getAttribute("class")+" "+"parcels_listshow");
+								}
+							}
+							);
+							
+							try {
+								FileWriter writer = new FileWriter(new File(count+".html"));
+								writer.write(sampleHtmlPage.asXml());
+								count++;
+								System.out.println("Written to file.");
+							} catch (FileNotFoundException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							
+						}
+					}
+				}
+
+			}
+
+
+
+
+
+
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} 
 	}
 
-	private URL startUrl;
-	private String domain;
-	private WebClient client;
-	private int depth;
-	private TreeSet<String> visited;
-	private File output;
-	private PrintStream out;
-	public Spider(WebClient client,String startUrl,int depth) throws MalformedURLException {
-		this.startUrl = new URL(startUrl);
-		this.domain = this.startUrl.getHost();
-		System.out.println(domain);
-		this.client = client;
-		this.depth = depth;
-		this.visited = new TreeSet<String>();
-	}
-	public void startCrawl(){
-		System.out.println("Starting crawl: " + startUrl);
-		try {
-			output = new File(startUrl.getHost());
-			out = new PrintStream(output);
-			HtmlPage page = client.getPage(startUrl);
-			crawl(startUrl.toString(),page,depth);
-			System.out.println("Done finally");
-			out.close();
-		} catch (FailingHttpStatusCodeException e) {
-			e.printStackTrace();
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-	}
-	private void performActions(String url,HtmlPage page){
-		Learner learner = new Learner();
-		learner.feedTrainingData(page, "/html/body/center[1]/table[1]/tbody[1]/tr[3]/td[1]/table[1]/tbody[1]/tr/td[contains(concat(' ',@class,' '),' title ')]/a[1]");
-		out.format("%40s%10d\n", url,learner.getAttributeValues().size());
-	}
-	
-	public void crawl(String address,HtmlPage page,int depth){
-		performActions(address,page);
-		if(depth > 0) {
-			List<HtmlAnchor> anchors = page.getAnchors();
-			for(HtmlAnchor a: anchors) {
-				for(int i=0;i<(this.depth-depth);i++) System.out.print("\t");
-				HtmlPage p = null;
-				try {
-					URL url = page.getFullyQualifiedUrl(a.getHrefAttribute());
-					if(visited.contains(url.toString())) continue;
-					else if(!startUrl.getHost().equals(url.getHost())) continue;
-					else {
-						p = client.getPage(url);
-						System.out.print("Descending... "+url);
-						System.out.println();
-						visited.add(url.toString());
-					}	
-					if(p!=null) crawl(url.toString(),p,depth-1);
-				} catch (Exception e){
-					e.printStackTrace();
-				}
-				
-				
+	private static void makeAttributeFullyQualified(HtmlPage page,List<HtmlElement> list,String attributeName) {
+		for(HtmlElement n: list){
+			try {
+				n.setAttribute(attributeName, page.getFullyQualifiedUrl(n.getAttribute(attributeName)).toString());
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}
+	public static void processUrls(HtmlPage page) {
+		makeAttributeFullyQualified(page, (List<HtmlElement>)page.getByXPath("//*[@src]"), "src");
+		makeAttributeFullyQualified(page, (List<HtmlElement>)page.getByXPath("//*[@href]"), "href");
+	}
+
+
 }

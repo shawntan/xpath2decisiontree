@@ -1,4 +1,4 @@
-java -Xms1024m -Xmx1024m -Dfile.encoding=UTF-8 \
+java -Xms2048m -Xmx2048m -Dfile.encoding=UTF-8 \
 -classpath \
 ./bin:\
 ./lib/* $@

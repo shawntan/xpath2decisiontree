@@ -1,13 +1,16 @@
 package spider;
 
+import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import learner.data.AttributeValues;
+
 
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
-public class Page {
+public class Page implements Serializable {
 	/*
 	 * Think about what other info page class should carry:
 	 * -Labels found?
@@ -18,12 +21,14 @@ public class Page {
 	private List<Page> outgoingLinks;
 	private HtmlPage htmlPage;
 	private int depth;
+	private AttributeValues attributeValues;
 	
 	Page(URL url,int depth){
 		this.url = url;
 		this.depth = depth;
 		incomingLinks = new ArrayList<Page>();
 		outgoingLinks = new ArrayList<Page>();
+		attributeValues = new AttributeValues();
 	}
 	
 	public URL getUrl() {
@@ -49,5 +54,9 @@ public class Page {
 	}
 	void setHtmlPage(HtmlPage htmlPage){
 		this.htmlPage = htmlPage;
+	}
+
+	public AttributeValues getAttributeValues() {
+		return attributeValues;
 	}
 }
