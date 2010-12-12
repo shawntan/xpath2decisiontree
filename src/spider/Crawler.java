@@ -4,13 +4,16 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.TreeMap;
-import java.util.concurrent.LinkedBlockingQueue;
 
+
+import learner.Learner;
 import main.Application;
 
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
@@ -18,42 +21,51 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
+
 public class Crawler implements Serializable {
 	WebClient client;
 	Queue<Page> downloadQueue;
 	Map<String,Page> visited;
 	Page entryPoint;
 	int depth;
-
 	boolean continueCrawl;
+	String domain;
+	String[] xpaths;
+	Learner[] learners;
+
 	public Crawler() {
 		Application.loadSettings();
 		client = Application.getWebClient();
 		client.setTimeout(3000);
-		downloadQueue = new LinkedBlockingQueue<Page>();
+		downloadQueue = new PriorityQueue<Page>();
 		visited = new TreeMap<String,Page>(); 
 		continueCrawl = true;
 	}
 
-	public void crawl(String startUrl,int depth) throws MalformedURLException {
+	public void startCrawl(String startUrl,String[] xpaths, int depth) throws MalformedURLException {
 		URL url = new URL(startUrl);
-		Page p = new Page(url,0);
+		Page p = new Page(url,0,xpaths);
 		this.depth = depth;
+		this.xpaths = xpaths;
+		this.domain = url.getHost();
+		this.learners = new Learner[xpaths.length];
+	
 		visited.put(url.toString(),p);
 		downloadQueue.add(p);
 		entryPoint = p;
 		crawl();
 	}
+	
 	private void crawl(){
 		while(!downloadQueue.isEmpty()){
-			Page p = downloadQueue.poll(); 
+			Page p = downloadQueue.poll();
+			System.out.println(p.getScore()+"\t"+p.getUrl());
 			try {
 				System.out.println("Links left:"+downloadQueue.size()+" Depth: "+p.getDepth() +" Downloading "+p.getUrl().toString());
-
 				if(p.getDepth() < this.depth){
 					HtmlPage htmlPage = client.getPage(p.getUrl());
 					p.setHtmlPage(htmlPage);
-					processPage(p,htmlPage, p.getDepth());
+					processPage(p);
 				}
 			} catch (FailingHttpStatusCodeException e) {
 				e.printStackTrace();
@@ -68,66 +80,48 @@ public class Crawler implements Serializable {
 		System.out.println("\"And we are done.\" - Sanjay Jain");
 	}
 
-	private URL linkToUrl(HtmlAnchor a) throws MalformedURLException{
-		HtmlPage page = (HtmlPage)a.getPage();
-		String url = a.getHrefAttribute();
-		int index = url.indexOf('#');
-		if(index<0) return page.getFullyQualifiedUrl(url);
-		else {
-			url = url.substring(0,index);
-			return page.getFullyQualifiedUrl(url);
-		}
-
-	}
-
-	private void processPage(Page parentPage,HtmlPage htmlPage,int depth){
+	private void processPage(Page parentPage){
 		if(continueCrawl) {
-			List<HtmlAnchor> links = htmlPage.getAnchors();
+			List<HtmlAnchor> links = parentPage.getHtmlPage().getAnchors();
 			for(HtmlAnchor a: links){
-				try {
-					URL url = linkToUrl(a);
-					if(url.getHost().equals(parentPage.getUrl().getHost())){
-						Page page = visited.get(url.toString());
-						if(page==null){
-							page = new Page(url,depth+1);
-							downloadQueue.add(page);
-							visited.put(url.toString(), page);
-						}
-						page.addToIncomingLinks(parentPage);	
-						parentPage.addToOutgoingLinks(page);
-					}
-				} catch (MalformedURLException e) {
-					e.printStackTrace();
+				processLink(a,parentPage);
+			}
+			if(downloadQueue.size()>= 50) continueCrawl = false;
+		}
+	}
+	
+	private void processLink(HtmlAnchor a, Page parentPage){
+		try {
+			URL url = CrawlerUtils.linkToUrl(a);
+			if(url.getHost().equals(this.domain)){
+				Page page = visited.get(url.toString());
+				if(page==null){
+					page = new Page(url, parentPage.getDepth() ,xpaths); 
+					page.setScore(entryPoint);
+					downloadQueue.add(page);
+					visited.put(url.toString(), page);
+				}
+				if(parentPage != page) {
+					page.addToIncomingLinks(parentPage);
+					parentPage.addToOutgoingLinks(page);
 				}
 			}
-			if(downloadQueue.size() > 100) continueCrawl = false;
+		} catch (MalformedURLException e) {
 		}
-		/*
-		AttributeValues av = parentPage.getAttributeValues();
-		LinkedList<LearnerData> collected = new LinkedList<LearnerData>();
-		FeatureExtractor<LearnerData> extractor = new FeatureExtractor<LearnerData>(av);
-		extractor.extractFromHtmlPage(collected, htmlPage,
-			"//div[@id='mainContent']/div[1]/div[1]/ul/li/h3[1]/a[1]"
-		);
-		collected = null;
-		extractor = null;
-		Set<String> attSet = parentPage.getAttributeValues().keySet();
-		Set<String> entrySet = entryPoint.getAttributeValues().keySet();
-		HashSet<String> origSet = new HashSet<String>(entryPoint.getAttributeValues().keySet());
-		origSet.retainAll(attSet);
-		System.out.println(((double)origSet.size()/entrySet.size())*100);*/
 	}
+
 	public Page getMostIncomingLinks(){
-		Collection<Page> pages = visited.values();
-		Page highest = null;
-		for(Page p:pages){
-			if(highest==null || highest.getIncomingLinks().size() < p.getIncomingLinks().size())
-				highest = p;
+		Collection<Page> p = visited.values();
+		Page[] parr = new Page[p.size()];
+		p.toArray(parr);
+		Arrays.sort(parr);
+		System.out.println("Top 10 links:");
+		for(int i=0;i<10 && i<p.size();i++){
+			System.out.println(parr[i].getIncomingLinks().size()+"\t"+parr[i].getUrl());
 		}
-		return highest;
-	}
+		return parr[0];
+	}	
 	public Collection<Page> getPages() {
 		return visited.values();
 	}
-
 }

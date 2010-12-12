@@ -78,9 +78,13 @@ public class FeatureExtractor<T extends AbstractData>{
 			e.extractFeature(data, n);
 		}
 	}
-	private void extractFromDomNode(List<T> extractedDataMaps,T data, DomNode node,List<DomNode> selected) {
+	private void extractFromDomNode(List<T> extractedDataMaps,T data, DomNode node,List<DomNode> selected, boolean onlyPositive) {
 		extractFeatures(data,node);
-		if(selected!=null)data.put(CLASS_ATTRIBUTE, selected.contains(node));
+		boolean isSelected = false;
+		if(selected!=null) {
+			isSelected = selected.contains(node);
+			data.put(CLASS_ATTRIBUTE, isSelected);
+		}
 		Iterable<DomNode> nodes = node.getChildNodes();
 		AbstractData parentData = data;
 		AbstractData previousData = null;
@@ -90,7 +94,7 @@ public class FeatureExtractor<T extends AbstractData>{
 				T currentData = createData(n);
 				currentData.setParentData(parentData);
 				currentData.setBodyData(parentData.getBodyData());
-				extractFromDomNode(extractedDataMaps,currentData,n,selected);
+				extractFromDomNode(extractedDataMaps,currentData,n,selected, onlyPositive);
 				if(previousData != null) {
 					previousData.setNextData(currentData);
 					currentData.setPreviousData(previousData);
@@ -98,7 +102,12 @@ public class FeatureExtractor<T extends AbstractData>{
 				previousData = currentData;
 			}
 		}
-		extractedDataMaps.add(data);
+		if(onlyPositive) {
+			if(isSelected) extractedDataMaps.add(data); 
+		} else {
+			extractedDataMaps.add(data);
+		}
+		
 	}
 	@SuppressWarnings("unchecked")
 	public void extractFromHtmlPage(List<T> extractedDataMaps,HtmlPage page) {
@@ -113,11 +122,12 @@ public class FeatureExtractor<T extends AbstractData>{
 		};
 		((ClassifierData)data).setNode(body);	
 		data.setAttributeValues(globalAttributes);
-		extractFromDomNode(extractedDataMaps,data,body,null);
+		extractFromDomNode(extractedDataMaps,data,body,null,false);
+		
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void extractFromHtmlPage(List<T> extractedDataMaps,HtmlPage page,String xpath) {
+	public void extractFromHtmlPage(List<T> extractedDataMaps,HtmlPage page,String xpath, boolean onlyPositive) {
 		classObj = (Class<T>)LearnerData.class;
 		List<DomNode> selected= (List<DomNode>)page.getByXPath(xpath);
 		System.out.println("Positive examples:"+selected.size());
@@ -128,9 +138,9 @@ public class FeatureExtractor<T extends AbstractData>{
 				return this;
 			}
 		};
-		
 		data.setAttributeValues(globalAttributes);
-		extractFromDomNode(extractedDataMaps,data,body,selected);
+		extractFromDomNode(extractedDataMaps,data,body,selected, onlyPositive);
+		System.out.println("Size of dataset: "+extractedDataMaps.size());
 	}
 	private int fillInstanceWithData(Instance instance,ArrayList<Attribute> attributeList,String prefix,AbstractData data){
 		Set<Map.Entry<String,Serializable>> entries = data.entrySet();
@@ -157,7 +167,6 @@ public class FeatureExtractor<T extends AbstractData>{
 						//System.out.println("No such value ["+AttributeValues.stringify(value)+"] for "+att.name());
 						//System.out.println("Moving along...");
 					}
-					
 					count++;
 				}
 			}

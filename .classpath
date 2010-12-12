@@ -23,5 +23,9 @@
 	<classpathentry kind="lib" path="lib/commons-dbcp-1.4.jar"/>
 	<classpathentry kind="lib" path="lib/commons-pool-1.5.4.jar"/>
 	<classpathentry kind="lib" path="lib/serializer-2.7.1.jar"/>
+	<classpathentry kind="lib" path="lib/jgrapht-jdk1.6.jar"/>
+	<classpathentry kind="lib" path="lib/jgraph.jar"/>
+	<classpathentry kind="lib" path="lib/jgraphlayout.jar"/>
+	<classpathentry kind="lib" path="lib/jgraph-jgrapht.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

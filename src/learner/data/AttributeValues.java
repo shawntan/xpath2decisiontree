@@ -14,6 +14,8 @@ import com.gargoylesoftware.htmlunit.html.DomNode;
 
 
 public class AttributeValues extends HashMap<String, AttributeValues.AttributeValuePair> {
+
+	private static final long serialVersionUID = 1L;
 	protected class AttributeValuePair implements Serializable {
 		Attribute attribute;
 		int index;

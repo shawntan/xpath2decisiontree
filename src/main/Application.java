@@ -21,7 +21,6 @@ import processes.tasks.download.PeriodicDownload;
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
 import com.gargoylesoftware.htmlunit.SilentCssErrorHandler;
-import com.gargoylesoftware.htmlunit.WaitingRefreshHandler;
 import com.gargoylesoftware.htmlunit.WebClient;
 
 import database.Database;
@@ -80,8 +79,9 @@ public class Application {
 		WebClient webClient = new WebClient(version);
 		webClient.setAjaxController(new NicelyResynchronizingAjaxController());
 		webClient.setJavaScriptEnabled(false);
-		webClient.setRefreshHandler(new WaitingRefreshHandler());
+		//webClient.setRefreshHandler(new WaitingRefreshHandler());
 		webClient.setCssErrorHandler(new SilentCssErrorHandler());
+		webClient.setThrowExceptionOnScriptError(false);
 		webClient.setJavaScriptTimeout(3000);
 		webClient.setTimeout(10000);
 		return webClient;
@@ -91,7 +91,7 @@ public class Application {
 		webClient = new WebClient(BrowserVersion.FIREFOX_3);
 		webClient.setAjaxController(new NicelyResynchronizingAjaxController());
 		webClient.setJavaScriptEnabled(false);
-		webClient.setRefreshHandler(new WaitingRefreshHandler());
+		//webClient.setRefreshHandler(new WaitingRefreshHandler());
 		webClient.setCssErrorHandler(new SilentCssErrorHandler());
 		webClient.setJavaScriptTimeout(3000);
 		webClient.setTimeout(10000);

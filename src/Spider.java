@@ -1,15 +1,7 @@
-
-
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.List;
@@ -31,81 +23,65 @@ public class Spider {
 		Crawler c = new Crawler();
 		try {
 
-			try {
-				ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File("save.file")));
-			} catch (Exception e) {
-				c.crawl("http://www.google.com.sg/search?q=in+my+skin",3);
-				try {
-					ObjectOutputStream objOut  = new ObjectOutputStream(new FileOutputStream(new File("save.file")));
-					objOut.writeObject(c);
-				} catch (FileNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-			}
+			String url		= 	"http://www.fifa.com/newscentre/news/index.html";
+			String xpath	= 	"//div[@id='mainContent']/div[1]/div[1]/ul/li/h3[1]/a[1]";
 
-			String xpath = "//div[@id='ires']/ol[1]/li[contains(concat(' ',@class,' '),' g ')]/h3[contains(concat(' ',@class,' '),' r ')]/a[contains(concat(' ',@class,' '),' l ')]";
+
+			c.startCrawl(url,new String[]{xpath},3);
 			Page popular = c.getMostIncomingLinks();
 			Collection<Page> pages = c.getPages();
-
 			System.out.println("Highest LINKS!: "+popular.getUrl());
-			Learner learner = new Learner();
 
+			Learner learner = new Learner();
 			Page samplePage = null;
 			int count = 0;
 			ElementClassifier classifier = null;
-			for(Page p: pages) {
+			boolean onlyPositive = false;
+			
+			for (Page p: pages) {
 				HtmlPage htmlPage = p.getHtmlPage();
-				if(htmlPage!=null){
-					if(count <= 10 && !htmlPage.getByXPath(xpath).isEmpty()){
-						if(classifier== null) {
-							learner.feedTrainingData(htmlPage, xpath);
-							classifier = learner.createClassifier();
-						}
-						else {
-							HtmlPage sampleHtmlPage = htmlPage;
-							processUrls(sampleHtmlPage);			
-							HtmlElement head = sampleHtmlPage.getElementsByTagName("head").get(0);
-							HtmlElement style = sampleHtmlPage.createElement("link");
-							style.setAttribute("rel", "stylesheet");
-							style.setAttribute("type","text/css");
-							style.setAttribute("href", "./stylesheet.css");
-							head.appendChild(style);
-							classifier.classifyPageElements(htmlPage,
+				if(p.isWanted() && (htmlPage!=null || xpath !=null) ){
+					learner.feedTrainingData(htmlPage, xpath, onlyPositive);
+					onlyPositive =true;
+				}
+				break;
+			}
+			classifier = learner.createClassifier();
+			for(Page p: pages) {
+				if(p.isWanted()){
+					HtmlPage htmlPage = p.getHtmlPage();
+					HtmlPage sampleHtmlPage = htmlPage;
+					processUrls(sampleHtmlPage);			
+					HtmlElement head = sampleHtmlPage.getElementsByTagName("head").get(0);
+					HtmlElement style = sampleHtmlPage.createElement("link");
+					style.setAttribute("rel", "stylesheet");
+					style.setAttribute("type","text/css");
+					style.setAttribute("href", "./stylesheet.css");
+					head.appendChild(style);
+					classifier.classifyPageElements(htmlPage,
 							new ClassifiedTask() {
-								public void performTask(DomNode element) {
-									HtmlElement e = (HtmlElement) element;
-									e.setAttribute("class",e.getAttribute("class")+" "+"parcels_listshow");
-								}
-							}
-							);
-							
-							try {
-								FileWriter writer = new FileWriter(new File(count+".html"));
-								writer.write(sampleHtmlPage.asXml());
-								count++;
-								System.out.println("Written to file.");
-							} catch (FileNotFoundException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							
+						public void performTask(DomNode element) {
+							HtmlElement e = (HtmlElement) element;
+							e.setAttribute("class",e.getAttribute("class")+" "+"parcels_listshow");
 						}
 					}
+					);
+
+					try {
+						FileWriter writer = new FileWriter(new File(count+".html"));
+						writer.write(sampleHtmlPage.asXml());
+						count++;
+						System.out.println("Written to file.");
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
 				}
-
 			}
-
-
-
-
-
 
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
