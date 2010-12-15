@@ -100,7 +100,9 @@ public class Page implements Serializable,Comparable<Page> {
 
 	@Override
 	public int compareTo(Page otherPage) {
-		return (int) Math.floor(this.getScore() - otherPage.getScore()); 
+		double thisScore = this.getScore() - this.incomingLinks.size();
+		double otherScore = otherPage.getScore() - otherPage.incomingLinks.size();
+		return (int)(thisScore - otherScore);
 	}
 
 	public boolean isWanted() {

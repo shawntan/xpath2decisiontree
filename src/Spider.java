@@ -15,19 +15,16 @@ public class Spider {
 		Crawler c = new Crawler();
 		try {
 
-			String url		= 	"http://www.fifa.com/worldfootball/statisticsandrecords/players/player=177788/index.html";
+			String url		= 	"http://www.straitstimes.com/BreakingNews/Breaking_News_Top_Stories_20101215.html";
 			
 			String[] xpaths = new String[]{
 					
-					"//div[@id='mainContent']" +
-					"/div[1]/div[2]/div[1]/div[1]" +
-					"/div[1]/div[1]/div[1]/table[1]" +
-					"/tbody[1]/tr[1]/td[3]"
+					"//div[@id='basecolour_bn']/table[1]/tbody[1]/tr[1]/td[2]/div[1]/div[3]/div[2]//a[1]"
 			
 			};
 			
 			String[] labels = new String[]{
-					"matches_played"
+					"headlines"
 			};
 			
 			c.startCrawl(url,labels,xpaths,3);
