@@ -13,6 +13,7 @@ import java.util.Properties;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.logging.LogFactory;
 
 import processes.TaskExecutor;
 import processes.TaskScheduler;
@@ -22,6 +23,7 @@ import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
 import com.gargoylesoftware.htmlunit.SilentCssErrorHandler;
 import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.html.HTMLParserListener;
 
 import database.Database;
 
@@ -71,6 +73,7 @@ public class Application {
 		return queryRunner;
 	}
 	public static WebClient getWebClient() {
+		LogFactory.getFactory().setAttribute("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog"); 
 		BrowserVersion version = new BrowserVersion(
 				"Netscape",
 				"5.0 (X11; U; Linux x86_64; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.470.0 Safari/534.3",
@@ -84,10 +87,10 @@ public class Application {
 		webClient.setThrowExceptionOnScriptError(false);
 		webClient.setJavaScriptTimeout(3000);
 		webClient.setTimeout(10000);
+		webClient.setHTMLParserListener(null);
 		return webClient;
 	}
 	private static void initializeClient() {
-		
 		webClient = new WebClient(BrowserVersion.FIREFOX_3);
 		webClient.setAjaxController(new NicelyResynchronizingAjaxController());
 		webClient.setJavaScriptEnabled(false);

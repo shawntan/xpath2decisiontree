@@ -1,16 +1,8 @@
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
+
 import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.List;
 
-import learner.ClassifiedTask;
-import learner.ElementClassifier;
-import learner.Learner;
-
-import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
@@ -23,30 +15,30 @@ public class Spider {
 		Crawler c = new Crawler();
 		try {
 
-			String url		= 	"http://www.fifa.com/newscentre/news/index.html";
-			String xpath	= 	"//div[@id='mainContent']/div[1]/div[1]/ul/li/h3[1]/a[1]";
+			String url		= 	"http://www.fifa.com/worldfootball/statisticsandrecords/players/player=177788/index.html";
+			
+			String[] xpaths = new String[]{
+					
+					"//div[@id='mainContent']" +
+					"/div[1]/div[2]/div[1]/div[1]" +
+					"/div[1]/div[1]/div[1]/table[1]" +
+					"/tbody[1]/tr[1]/td[3]"
+			
+			};
+			
+			String[] labels = new String[]{
+					"matches_played"
+			};
+			
+			c.startCrawl(url,labels,xpaths,3);
 
-
-			c.startCrawl(url,new String[]{xpath},3);
-			Page popular = c.getMostIncomingLinks();
-			Collection<Page> pages = c.getPages();
-			System.out.println("Highest LINKS!: "+popular.getUrl());
-
-			Learner learner = new Learner();
+/*
+			Learner learner = new Learner(labels,xpaths);
 			Page samplePage = null;
 			int count = 0;
 			ElementClassifier classifier = null;
 			boolean onlyPositive = false;
 			
-			for (Page p: pages) {
-				HtmlPage htmlPage = p.getHtmlPage();
-				if(p.isWanted() && (htmlPage!=null || xpath !=null) ){
-					learner.feedTrainingData(htmlPage, xpath, onlyPositive);
-					onlyPositive =true;
-				}
-				break;
-			}
-			classifier = learner.createClassifier();
 			for(Page p: pages) {
 				if(p.isWanted()){
 					HtmlPage htmlPage = p.getHtmlPage();
@@ -83,6 +75,7 @@ public class Spider {
 				}
 			}
 
+		*/
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} 
@@ -102,6 +95,4 @@ public class Spider {
 		makeAttributeFullyQualified(page, (List<HtmlElement>)page.getByXPath("//*[@src]"), "src");
 		makeAttributeFullyQualified(page, (List<HtmlElement>)page.getByXPath("//*[@href]"), "href");
 	}
-
-
 }

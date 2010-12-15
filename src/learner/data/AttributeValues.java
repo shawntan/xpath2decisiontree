@@ -2,11 +2,15 @@ package learner.data;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import learner.FeatureExtractor;
 
 import weka.core.Attribute;
 
@@ -14,8 +18,9 @@ import com.gargoylesoftware.htmlunit.html.DomNode;
 
 
 public class AttributeValues extends HashMap<String, AttributeValues.AttributeValuePair> {
-
-	private static final long serialVersionUID = 1L;
+	ArrayList<Attribute> attributeList;
+	private String[] labels;
+	
 	protected class AttributeValuePair implements Serializable {
 		Attribute attribute;
 		int index;
@@ -28,6 +33,7 @@ public class AttributeValues extends HashMap<String, AttributeValues.AttributeVa
 		}
 	}
 	final static public ArrayList<String>  booleanValues = new ArrayList<String>();
+	private static final long serialVersionUID = 1L;
 
 	final static public List<String> tagNames = new ArrayList<String>();
 	static {
@@ -53,9 +59,17 @@ public class AttributeValues extends HashMap<String, AttributeValues.AttributeVa
 
 
 
-	ArrayList<Attribute> attributeList;
 
 
+	public AttributeValues(String[] labels) {
+		List<String> values = new ArrayList<String>(labels.length+1);
+		Collections.addAll(values,labels);
+		values.add(FeatureExtractor.CLASS_ATTRIBUTE_NIL_VALUE);
+		AttributeValuePair avp = new AttributeValuePair();
+		avp.values = values;
+		super.put(FeatureExtractor.CLASS_ATTRIBUTE,avp);
+		this.labels = labels;
+ 	}
 
 
 
@@ -190,6 +204,14 @@ public class AttributeValues extends HashMap<String, AttributeValues.AttributeVa
 			}
 			addWithNoRepeat(avp.values, stringify(value));
 		}
+	}
+
+
+
+
+
+	public String[] getLabels() {
+		return labels;
 	}
 
 }

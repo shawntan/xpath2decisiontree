@@ -3,41 +3,36 @@ package spider;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-
-import learner.data.AttributeValues;
-
 
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 public class Page implements Serializable,Comparable<Page> {
 
-
-
+	private static final long serialVersionUID = -1937458209711391963L;
 	private int depth;
-
 	private List<Page> incomingLinks;
 	private List<Page> outgoingLinks;
 	private URL url;
 	private HtmlPage htmlPage;
 
-	private String[] wantedXPaths;
 	private List<HtmlElement>[] wantedElements;
+	
 	private boolean wanted;
+	private int positiveInstanceCount = -1;
+	private int instanceCount = -1;
+	
+	private double score;
 
-	private AttributeValues attributeValues;
-
-	private int score;
-
-	Page(URL url,int depth, String[] wantedXPaths){
+	@SuppressWarnings("unchecked")
+	Page(URL url,int depth){
 		this.url = url;
 		this.depth = depth;
-		this.wantedXPaths = wantedXPaths;
-		this.wantedElements = (List<HtmlElement>[])new List[wantedXPaths.length];
+		
 		incomingLinks = new ArrayList<Page>();
 		outgoingLinks = new ArrayList<Page>();
-		attributeValues = new AttributeValues();
 		score = 0;
 	}
 
@@ -68,18 +63,10 @@ public class Page implements Serializable,Comparable<Page> {
 	public HtmlPage getHtmlPage() {
 		return htmlPage;
 	}
+	
+	@SuppressWarnings("unchecked")
 	void setHtmlPage(HtmlPage htmlPage){
 		this.htmlPage = htmlPage;
-		for(int i=0; i<wantedXPaths.length;i++){
-			wantedElements[i] = (List<HtmlElement>)htmlPage.getByXPath(wantedXPaths[i]);
-			if(wantedElements[i]==null || wantedElements[i].isEmpty()) return;
-		}
-		this.wanted = true;
-		System.out.println("Wanted page!!");
-	}
-
-	public AttributeValues getAttributeValues() {
-		return attributeValues;
 	}
 
 	public void removePage(){
@@ -90,26 +77,61 @@ public class Page implements Serializable,Comparable<Page> {
 			p.removeFromOutgoingLinks(this);
 		}
 	}
-	public void setScore(Page startPage){
-		String path1 = startPage.getUrl().getPath();
+	public void setScore(Collection<Page> wantedPages){
+		int totalScore = 0;
+		for(Page p: wantedPages) totalScore += score(p);
+		this.score = (double)totalScore/wantedPages.size();
+	}
+	
+	private int score(Page p){
+		String path1 = p.getUrl().getPath();
 		String path2 = this.getUrl().getPath();
 		int pathDistance = CrawlerUtils.editDistance(path1,path2);
-		String query1 = startPage.getUrl().getQuery();
+		String query1 = p.getUrl().getQuery();
 		String query2 = this.getUrl().getQuery();
 		int queryDistance = CrawlerUtils.editDistance(query1,query2);
-		this.score = pathDistance * 2 + queryDistance;
+		return pathDistance * 2 + queryDistance;
 	}
-	public int getScore(){
+	
+	
+	public double getScore(){
 		return this.score;
 	}
 
 	@Override
 	public int compareTo(Page otherPage) {
-		return this.getScore() - otherPage.getScore(); 
+		return (int) Math.floor(this.getScore() - otherPage.getScore()); 
 	}
 
 	public boolean isWanted() {
 		return wanted;
+	}
+	void setWanted(boolean wanted){
+		this.wanted=wanted;
+	}
+
+	public List<HtmlElement>[] getWantedElements() {
+		return wantedElements;
+	}
+
+	int getPositiveInstanceCount() {
+		return positiveInstanceCount;
+	}
+
+	void setPositiveInstanceCount(int positiveInstanceCount) {
+		this.positiveInstanceCount = positiveInstanceCount;
+	}
+
+	int getInstanceCount() {
+		return instanceCount;
+	}
+
+	void setInstanceCount(int instanceCount) {
+		this.instanceCount = instanceCount;
+	}
+
+	void setWantedElements(List<HtmlElement>[] wantedElements) {
+		this.wantedElements = wantedElements;
 	}
 
 

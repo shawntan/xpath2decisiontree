@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -19,85 +20,126 @@ import main.Application;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
+import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 
 public class Crawler implements Serializable {
-	WebClient client;
-	Queue<Page> downloadQueue;
-	Map<String,Page> visited;
-	Page entryPoint;
-	int depth;
-	boolean continueCrawl;
-	String domain;
-	String[] xpaths;
-	Learner[] learners;
+	
+	//Required tools
+	private WebClient client;
+	private Learner learner;
 
+	//Collected data
+	private Queue<Page> downloadQueue;
+	private Map<String,Page> visited;
+	private Collection<Page> wantedPages;
+
+	//Data to extract
+	private String domain;
+	private String[] xpaths;
+
+	//Flow control
+	private int totalPositiveInstances;
+	private boolean stopCrawling = false;
+	private boolean onlyPositive = false;
+	
 	public Crawler() {
 		Application.loadSettings();
 		client = Application.getWebClient();
 		client.setTimeout(3000);
-		downloadQueue = new PriorityQueue<Page>();
-		visited = new TreeMap<String,Page>(); 
-		continueCrawl = true;
-	}
 
-	public void startCrawl(String startUrl,String[] xpaths, int depth) throws MalformedURLException {
+	}
+	public void startCrawl(String startUrl,String[] labels, String[] xpaths, int depth) throws MalformedURLException {
 		URL url = new URL(startUrl);
-		Page p = new Page(url,0,xpaths);
-		this.depth = depth;
-		this.xpaths = xpaths;
-		this.domain = url.getHost();
-		this.learners = new Learner[xpaths.length];
-	
+		Page p = new Page(url,0);
+		
+		this.xpaths 		= xpaths;
+		this.domain 		= url.getHost();
+		this.learner 		= new Learner(labels,xpaths);
+		this.downloadQueue 	= new PriorityQueue<Page>();
+		this.visited 		= new TreeMap<String,Page>(); 
+		this.wantedPages 	= new HashSet<Page>();
+
 		visited.put(url.toString(),p);
 		downloadQueue.add(p);
-		entryPoint = p;
+		
 		crawl();
+		
+		//Think about this. Needed?
+		System.out.println("Creating classifier...");
+		learner.createClassifier();
 	}
-	
+
 	private void crawl(){
-		while(!downloadQueue.isEmpty()){
+		while(!downloadQueue.isEmpty() && !stopCrawling){
 			Page p = downloadQueue.poll();
-			System.out.println(p.getScore()+"\t"+p.getUrl());
 			try {
-				System.out.println("Links left:"+downloadQueue.size()+" Depth: "+p.getDepth() +" Downloading "+p.getUrl().toString());
-				if(p.getDepth() < this.depth){
-					HtmlPage htmlPage = client.getPage(p.getUrl());
-					p.setHtmlPage(htmlPage);
-					processPage(p);
-				}
+				System.out.println(
+						" Links left:"+downloadQueue.size() +
+						" Depth: "+p.getDepth() + 
+						" Score: "+ p.getScore()+
+						" Downloading "+p.getUrl().toString()
+				);
+				HtmlPage htmlPage = client.getPage(p.getUrl());
+				p.setHtmlPage(htmlPage);
+				processPage(p);
 			} catch (FailingHttpStatusCodeException e) {
-				e.printStackTrace();
+				System.out.println("Failed.");
 			} catch (IOException e) {
-				e.printStackTrace();
+				System.out.println("Retry?");
 			} catch (ClassCastException e) {
 				System.out.println("This is feed lah!");
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
 		}
 		System.out.println("\"And we are done.\" - Sanjay Jain");
 	}
 
 	private void processPage(Page parentPage){
-		if(continueCrawl) {
-			List<HtmlAnchor> links = parentPage.getHtmlPage().getAnchors();
-			for(HtmlAnchor a: links){
-				processLink(a,parentPage);
-			}
-			if(downloadQueue.size()>= 50) continueCrawl = false;
+		extractPageData(parentPage);
+		if(parentPage.isWanted()) {	
+			int collectedInstances = learner.feedTrainingData(
+					parentPage.getHtmlPage(),
+					parentPage.getWantedElements(),
+					onlyPositive
+			);
+			onlyPositive = true;
+			wantedPages.add(parentPage);
+			System.out.println("Wanted page!!");
+			
+			double ratio = (double)totalPositiveInstances/collectedInstances;
+			System.out.println(" Total +ve instances: " + totalPositiveInstances + " Total instances: "+ collectedInstances+" Ratio: " +ratio);
+			if(ratio >= 0.5) stopCrawling = true;
+		}
+		List<HtmlAnchor> links = parentPage.getHtmlPage().getAnchors();
+		for(HtmlAnchor a: links){
+			processLink(a,parentPage);
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
+	private void extractPageData(Page p){
+		int count = 0;
+		List<HtmlElement>[] wantedElements = (List<HtmlElement>[])new List[xpaths.length];
+		for(int i=0; i<xpaths.length;i++){
+			wantedElements[i] = (List<HtmlElement>)p.getHtmlPage().getByXPath(xpaths[i]);
+			if(wantedElements[i]==null || wantedElements[i].isEmpty()) return;
+			count+=wantedElements[i].size();
+		}
+		p.setWanted(true);
+		p.setPositiveInstanceCount(count);
+		p.setWantedElements(wantedElements);
+		totalPositiveInstances += count;
+	}
+
 	private void processLink(HtmlAnchor a, Page parentPage){
 		try {
 			URL url = CrawlerUtils.linkToUrl(a);
 			if(url.getHost().equals(this.domain)){
 				Page page = visited.get(url.toString());
 				if(page==null){
-					page = new Page(url, parentPage.getDepth() ,xpaths); 
-					page.setScore(entryPoint);
+					page = new Page(url, parentPage.getDepth()+1 ); 
+					page.setScore(wantedPages);
 					downloadQueue.add(page);
 					visited.put(url.toString(), page);
 				}
@@ -110,6 +152,8 @@ public class Crawler implements Serializable {
 		}
 	}
 
+
+	
 	public Page getMostIncomingLinks(){
 		Collection<Page> p = visited.values();
 		Page[] parr = new Page[p.size()];
@@ -124,4 +168,6 @@ public class Crawler implements Serializable {
 	public Collection<Page> getPages() {
 		return visited.values();
 	}
+	
+	
 }

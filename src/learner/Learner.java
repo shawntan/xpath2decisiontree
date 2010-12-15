@@ -8,6 +8,7 @@ import learner.data.LearnerData;
 import weka.classifiers.trees.J48;
 import weka.core.Instances;
 
+import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 
@@ -17,9 +18,13 @@ public class Learner {
 	private List<LearnerData> extractedDataMaps;
 	private FeatureExtractor<LearnerData> featureExtractor;
 	
-	public Learner() {
-		attributeValues = new AttributeValues();
+	public Learner(String[] labels,String[] xpaths) {
+		attributeValues = new AttributeValues(labels);
 		featureExtractor = new FeatureExtractor<LearnerData>(attributeValues);
+	}
+	
+	public int getInstanceCount(){
+		return extractedDataMaps.size();
 	}
 
 	public ElementClassifier createClassifier(){
@@ -37,9 +42,10 @@ public class Learner {
 
 
 	
-	public void feedTrainingData(HtmlPage page, String xpath, boolean onlyPositive) {
+	public int feedTrainingData(HtmlPage page, List<HtmlElement>[] selectedItems, boolean onlyPositive) {
 		if(extractedDataMaps == null) extractedDataMaps = new LinkedList<LearnerData>();
-		featureExtractor.extractFromHtmlPage(extractedDataMaps,page, xpath, onlyPositive);
+		featureExtractor.extractFromHtmlPage(extractedDataMaps, page, selectedItems, onlyPositive);
+		return extractedDataMaps.size();
 	}
 
 	public AttributeValues getAttributeValues() {

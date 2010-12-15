@@ -19,6 +19,7 @@ import weka.core.Instances;
 import weka.core.SparseInstance;
 
 import com.gargoylesoftware.htmlunit.html.DomNode;
+import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 
@@ -26,12 +27,15 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 public class FeatureExtractor<T extends AbstractData>{
 	public static final String CLASS_ATTRIBUTE = "wanted";
+	public static final String CLASS_ATTRIBUTE_NIL_VALUE = "none";
 	private Class<T> classObj;
 	private Extractor[] extractors;
 	private AttributeValues globalAttributes;
-
+	private String[] labels;
+	
 	public FeatureExtractor(AttributeValues attributeValues) {
 		globalAttributes = attributeValues;
+		this.labels = attributeValues.getLabels();
 		extractors = new Extractor[]{
 				new Content()
 		};
@@ -44,18 +48,16 @@ public class FeatureExtractor<T extends AbstractData>{
 			try {
 				((ClassifierData)data).setNode(node);			
 			} catch (ClassCastException e){
-			} finally {
-				return (T)data;
-			}
+			} 
+			return (T)data;
 		} catch (InstantiationException e) {
 			return null;
 		} catch (IllegalAccessException e) {
 			return null;
 		}
 	}
-
+	
 	public Instances createTrainingSet(String name,List<T> extractedDataMaps) {
-		
 		ArrayList<Attribute> attributeList =  globalAttributes.getAttributeList();
 		System.out.println("No. of Attributes: "+attributeList.size());
 		Instances trainingSet = new Instances(
@@ -78,13 +80,18 @@ public class FeatureExtractor<T extends AbstractData>{
 			e.extractFeature(data, n);
 		}
 	}
-	private void extractFromDomNode(List<T> extractedDataMaps,T data, DomNode node,List<DomNode> selected, boolean onlyPositive) {
+	private void extractFromDomNode(List<T> extractedDataMaps,T data, DomNode node,List<HtmlElement>[] selectedItems, boolean onlyPositive) {
 		extractFeatures(data,node);
 		boolean isSelected = false;
-		if(selected!=null) {
-			isSelected = selected.contains(node);
-			data.put(CLASS_ATTRIBUTE, isSelected);
+		for(int i=0;i<selectedItems.length;i++){
+			if(selectedItems[i].contains(node)){
+				data.put(CLASS_ATTRIBUTE, labels[i]);
+				isSelected = true;
+				break;
+			}
 		}
+		if(!isSelected) data.put(CLASS_ATTRIBUTE, CLASS_ATTRIBUTE_NIL_VALUE);
+		
 		Iterable<DomNode> nodes = node.getChildNodes();
 		AbstractData parentData = data;
 		AbstractData previousData = null;
@@ -94,7 +101,13 @@ public class FeatureExtractor<T extends AbstractData>{
 				T currentData = createData(n);
 				currentData.setParentData(parentData);
 				currentData.setBodyData(parentData.getBodyData());
-				extractFromDomNode(extractedDataMaps,currentData,n,selected, onlyPositive);
+				extractFromDomNode(
+						extractedDataMaps,
+						currentData,
+						n,
+						selectedItems,
+						onlyPositive
+				);
 				if(previousData != null) {
 					previousData.setNextData(currentData);
 					currentData.setPreviousData(previousData);
@@ -126,11 +139,8 @@ public class FeatureExtractor<T extends AbstractData>{
 		
 	}
 	
-	@SuppressWarnings("unchecked")
-	public void extractFromHtmlPage(List<T> extractedDataMaps,HtmlPage page,String xpath, boolean onlyPositive) {
+	public void extractFromHtmlPage(List<T> extractedDataMaps,HtmlPage page, List<HtmlElement>[] selectedItems, boolean onlyPositive) {
 		classObj = (Class<T>)LearnerData.class;
-		List<DomNode> selected= (List<DomNode>)page.getByXPath(xpath);
-		System.out.println("Positive examples:"+selected.size());
 		DomNode body = page.getBody();
 		T data = (T)new LearnerData() {
 			@Override
@@ -139,7 +149,7 @@ public class FeatureExtractor<T extends AbstractData>{
 			}
 		};
 		data.setAttributeValues(globalAttributes);
-		extractFromDomNode(extractedDataMaps,data,body,selected, onlyPositive);
+		extractFromDomNode(extractedDataMaps,data,body,selectedItems, onlyPositive);
 		System.out.println("Size of dataset: "+extractedDataMaps.size());
 	}
 	private int fillInstanceWithData(Instance instance,ArrayList<Attribute> attributeList,String prefix,AbstractData data){
