@@ -12,50 +12,35 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 public class Page implements Serializable,Comparable<Page> {
 
 	private static final long serialVersionUID = -1937458209711391963L;
+	
+	private URL url;
 	private int depth;
 	private List<Page> incomingLinks;
 	private List<Page> outgoingLinks;
-	private URL url;
-	private HtmlPage htmlPage;
 
+	private HtmlPage htmlPage;
 	private List<HtmlElement>[] wantedElements;
-	
-	private boolean wanted;
-	private int positiveInstanceCount = -1;
-	private int instanceCount = -1;
 	
 	private double score;
 
 	@SuppressWarnings("unchecked")
-	Page(URL url,int depth){
+	Page(Collection<Page> wantedPages, URL url,int depth){
 		this.url = url;
 		this.depth = depth;
-		
-		incomingLinks = new ArrayList<Page>();
-		outgoingLinks = new ArrayList<Page>();
-		score = 0;
+		this.incomingLinks = new ArrayList<Page>();
+		this.outgoingLinks = new ArrayList<Page>();
+		setScore(wantedPages);
 	}
 
-	public URL getUrl() {
-		return url;
-	}
-	public List<Page> getIncomingLinks() {
-		return incomingLinks;
-	}
-	public List<Page> getOutgoingLinks() {
-		return outgoingLinks;
-	}
 	public boolean addToIncomingLinks(Page page){
 		return incomingLinks.add(page);
 	}
 	public boolean addToOutgoingLinks(Page page){
 		return outgoingLinks.add(page);
 	}
-	public void removeFromIncomingLinks(Page page){
-		incomingLinks.remove(page);
-	}
-	public void removeFromOutgoingLinks(Page page){
-		outgoingLinks.remove(page);
+	@Override
+	public int compareTo(Page otherPage) {
+		return (int)(this.getScore()-otherPage.getScore());
 	}
 	public int getDepth(){
 		return depth;
@@ -63,10 +48,35 @@ public class Page implements Serializable,Comparable<Page> {
 	public HtmlPage getHtmlPage() {
 		return htmlPage;
 	}
+	public List<Page> getIncomingLinks() {
+		return incomingLinks;
+	}
+	public List<Page> getOutgoingLinks() {
+		return outgoingLinks;
+	}
+
 	
-	@SuppressWarnings("unchecked")
-	void setHtmlPage(HtmlPage htmlPage){
-		this.htmlPage = htmlPage;
+	public double getScore(){
+		return this.score - this.incomingLinks.size();
+	}
+
+	public URL getUrl() {
+		return url;
+	}
+	public List<HtmlElement>[] getWantedElements() {
+		return wantedElements;
+	}
+	
+	public boolean isWanted() {
+		return wantedElements!=null;
+	}
+	
+	
+	public void removeFromIncomingLinks(Page page){
+		incomingLinks.remove(page);
+	}
+	public void removeFromOutgoingLinks(Page page){
+		outgoingLinks.remove(page);
 	}
 
 	public void removePage(){
@@ -76,11 +86,6 @@ public class Page implements Serializable,Comparable<Page> {
 		for(Page p: incomingLinks){
 			p.removeFromOutgoingLinks(this);
 		}
-	}
-	public void setScore(Collection<Page> wantedPages){
-		int totalScore = 0;
-		for(Page p: wantedPages) totalScore += score(p);
-		this.score = (double)totalScore/wantedPages.size();
 	}
 	
 	private int score(Page p){
@@ -92,47 +97,23 @@ public class Page implements Serializable,Comparable<Page> {
 		int queryDistance = CrawlerUtils.editDistance(query1,query2);
 		return pathDistance * 2 + queryDistance;
 	}
-	
-	
-	public double getScore(){
-		return this.score;
+
+	@SuppressWarnings("unchecked")
+	void setHtmlPage(HtmlPage htmlPage){
+		this.htmlPage = htmlPage;
 	}
 
-	@Override
-	public int compareTo(Page otherPage) {
-		double thisScore = this.getScore() - this.incomingLinks.size();
-		double otherScore = otherPage.getScore() - otherPage.incomingLinks.size();
-		return (int)(thisScore - otherScore);
-	}
+	private void setScore(Collection<Page> wantedPages){
+		if(wantedPages.size()==0) {
+			this.score = 0;
+		} else {
+			int totalScore = 0;
+			for(Page p: wantedPages) totalScore += score(p);
+			this.score = (double)totalScore/wantedPages.size();
+		}
 
-	public boolean isWanted() {
-		return wanted;
 	}
-	void setWanted(boolean wanted){
-		this.wanted=wanted;
-	}
-
-	public List<HtmlElement>[] getWantedElements() {
-		return wantedElements;
-	}
-
-	int getPositiveInstanceCount() {
-		return positiveInstanceCount;
-	}
-
-	void setPositiveInstanceCount(int positiveInstanceCount) {
-		this.positiveInstanceCount = positiveInstanceCount;
-	}
-
-	int getInstanceCount() {
-		return instanceCount;
-	}
-
-	void setInstanceCount(int instanceCount) {
-		this.instanceCount = instanceCount;
-	}
-
-	void setWantedElements(List<HtmlElement>[] wantedElements) {
+	protected void setWantedElements(List<HtmlElement>[] wantedElements) {
 		this.wantedElements = wantedElements;
 	}
 

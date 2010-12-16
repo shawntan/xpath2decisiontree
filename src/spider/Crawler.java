@@ -30,13 +30,14 @@ public class Crawler implements Serializable {
 	private WebClient client;
 	private Learner learner;
 
+	
 	//Collected data
 	private Queue<Page> downloadQueue;
 	private Map<String,Page> visited;
 	private Collection<Page> wantedPages;
 
-	//Data to extract
-	private String domain;
+	//Seed Data
+	private URL startUrl;
 	private String[] xpaths;
 
 	//Flow control
@@ -48,20 +49,19 @@ public class Crawler implements Serializable {
 		Application.loadSettings();
 		client = Application.getWebClient();
 		client.setTimeout(3000);
-
 	}
+	
 	public void startCrawl(String startUrl,String[] labels, String[] xpaths, int depth) throws MalformedURLException {
-		URL url = new URL(startUrl);
-		Page p = new Page(url,0);
-		
 		this.xpaths 		= xpaths;
-		this.domain 		= url.getHost();
+		this.startUrl		= new URL(startUrl);
 		this.learner 		= new Learner(labels,xpaths);
 		this.downloadQueue 	= new PriorityQueue<Page>();
 		this.visited 		= new TreeMap<String,Page>(); 
 		this.wantedPages 	= new HashSet<Page>();
 
-		visited.put(url.toString(),p);
+		Page p = new Page(this.wantedPages,this.startUrl,0);
+		
+		visited.put(this.startUrl.toString(),p);
 		downloadQueue.add(p);
 		
 		crawl();
@@ -96,7 +96,10 @@ public class Crawler implements Serializable {
 	}
 
 	private void processPage(Page parentPage){
+		
+		processLinks(parentPage);
 		extractPageData(parentPage);
+		
 		if(parentPage.isWanted()) {	
 			int collectedInstances = learner.feedTrainingData(
 					parentPage.getHtmlPage(),
@@ -105,41 +108,25 @@ public class Crawler implements Serializable {
 			);
 			onlyPositive = true;
 			wantedPages.add(parentPage);
-			System.out.println("Wanted page!!");
-			
 			double ratio = (double)totalPositiveInstances/collectedInstances;
-			System.out.println(" Total +ve instances: " + totalPositiveInstances + " Total instances: "+ collectedInstances+" Ratio: " +ratio);
+			System.out.println("\tTotal +ve instances: " + totalPositiveInstances + " Total instances: "+ collectedInstances+" Ratio: " +ratio);
 			if(ratio >= 0.5) stopCrawling = true;
 		}
-		List<HtmlAnchor> links = parentPage.getHtmlPage().getAnchors();
-		for(HtmlAnchor a: links){
-			processLink(a,parentPage);
-		}
+		
 	}
 	
-	@SuppressWarnings("unchecked")
-	private void extractPageData(Page p){
-		int count = 0;
-		List<HtmlElement>[] wantedElements = (List<HtmlElement>[])new List[xpaths.length];
-		for(int i=0; i<xpaths.length;i++){
-			wantedElements[i] = (List<HtmlElement>)p.getHtmlPage().getByXPath(xpaths[i]);
-			if(wantedElements[i]==null || wantedElements[i].isEmpty()) return;
-			count+=wantedElements[i].size();
-		}
-		p.setWanted(true);
-		p.setPositiveInstanceCount(count);
-		p.setWantedElements(wantedElements);
-		totalPositiveInstances += count;
+	private void processLinks(Page p) {
+		List<HtmlAnchor> links = p.getHtmlPage().getAnchors();
+		for(HtmlAnchor a: links) processLink(a,p);
 	}
-
+	
 	private void processLink(HtmlAnchor a, Page parentPage){
 		try {
 			URL url = CrawlerUtils.linkToUrl(a);
-			if(url.getHost().equals(this.domain)){
+			if(url.getHost().equals(this.startUrl.getHost())){
 				Page page = visited.get(url.toString());
 				if(page==null){
-					page = new Page(url, parentPage.getDepth()+1 ); 
-					page.setScore(wantedPages);
+					page = new Page(this.wantedPages,url, parentPage.getDepth()+1); 
 					downloadQueue.add(page);
 					visited.put(url.toString(), page);
 				}
@@ -151,9 +138,23 @@ public class Crawler implements Serializable {
 		} catch (MalformedURLException e) {
 		}
 	}
+	@SuppressWarnings("unchecked")
+	private void extractPageData(Page p){
+		int count = 0;
+		List<HtmlElement>[] wantedElements = (List<HtmlElement>[])new List[xpaths.length];
+		for(int i=0; i<xpaths.length;i++){
+			wantedElements[i] = (List<HtmlElement>)p.getHtmlPage().getByXPath(xpaths[i]);
+			if(wantedElements[i]==null || wantedElements[i].isEmpty()){
+				p.setHtmlPage(null);
+				return;
+			}
+			count+=wantedElements[i].size();
+		}
+		p.setPositiveInstanceCount(count);
+		p.setWantedElements(wantedElements);
+		totalPositiveInstances += count;
+	}
 
-
-	
 	public Page getMostIncomingLinks(){
 		Collection<Page> p = visited.values();
 		Page[] parr = new Page[p.size()];
