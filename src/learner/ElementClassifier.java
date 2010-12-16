@@ -33,10 +33,10 @@ public class ElementClassifier {
 		try {
 			for(int i=0;i<instanceSize;i++) {
 				Instance instance = instances.get(i);
-				if(classifier.classifyInstance(instance)==0.0) {
-					passCount++;
-					task.performTask(dataList.get(i).getNode());
-				}
+				task.performTask(
+						(int)Math.round(classifier.classifyInstance(instance)),
+						dataList.get(i).getNode()
+				);
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

@@ -33,10 +33,16 @@ public class Page implements Serializable,Comparable<Page> {
 	}
 
 	public boolean addToIncomingLinks(Page page){
-		return incomingLinks.add(page);
+		if(!incomingLinks.contains(page)){
+			return incomingLinks.add(page);
+		}
+		else return false;
 	}
 	public boolean addToOutgoingLinks(Page page){
-		return outgoingLinks.add(page);
+		if(!outgoingLinks.contains(page)){
+			return outgoingLinks.add(page);
+		}
+		else return false;
 	}
 	@Override
 	public int compareTo(Page otherPage) {
@@ -91,10 +97,24 @@ public class Page implements Serializable,Comparable<Page> {
 	private int score(Page p){
 		String path1 = p.getUrl().getPath();
 		String path2 = this.getUrl().getPath();
-		int pathDistance = CrawlerUtils.editDistance(path1,path2);
+		
+		int pathDistance;
+		if(path1==null && path2 ==null) pathDistance = 0;
+		else if(path1==null) pathDistance = path2.length();
+		else if(path2==null) pathDistance = path1.length();
+		else if(path1.equals(path2))pathDistance = 0;
+		else pathDistance = CrawlerUtils.editDistance(path1,path2);
+		
 		String query1 = p.getUrl().getQuery();
 		String query2 = this.getUrl().getQuery();
-		int queryDistance = CrawlerUtils.editDistance(query1,query2);
+		
+		int queryDistance;
+		if(query1 == null && query2 == null) queryDistance = 0;
+		else if(query1==null) queryDistance = query2.length();
+		else if (query2==null) queryDistance = query1.length();
+		else if(query1.equals(query2)) queryDistance = 0;
+		else queryDistance = CrawlerUtils.editDistance(query1,query2);
+		
 		return pathDistance * 2 + queryDistance;
 	}
 

@@ -13,7 +13,10 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.TreeMap;
 
+import weka.classifiers.Classifier;
 
+
+import learner.ElementClassifier;
 import learner.Learner;
 import main.Application;
 
@@ -45,13 +48,14 @@ public class Crawler implements Serializable {
 	private boolean stopCrawling = false;
 	private boolean onlyPositive = false;
 	
+	
 	public Crawler() {
 		Application.loadSettings();
 		client = Application.getWebClient();
 		client.setTimeout(3000);
 	}
 	
-	public void startCrawl(String startUrl,String[] labels, String[] xpaths, int depth) throws MalformedURLException {
+	public ElementClassifier startCrawl(String startUrl,String[] labels, String[] xpaths, int depth) throws MalformedURLException {
 		this.xpaths 		= xpaths;
 		this.startUrl		= new URL(startUrl);
 		this.learner 		= new Learner(labels,xpaths);
@@ -68,7 +72,7 @@ public class Crawler implements Serializable {
 		
 		//Think about this. Needed?
 		System.out.println("Creating classifier...");
-		learner.createClassifier();
+		return learner.createClassifier();
 	}
 
 	private void crawl(){
@@ -150,25 +154,13 @@ public class Crawler implements Serializable {
 			}
 			count+=wantedElements[i].size();
 		}
-		p.setPositiveInstanceCount(count);
 		p.setWantedElements(wantedElements);
 		totalPositiveInstances += count;
 	}
 
-	public Page getMostIncomingLinks(){
-		Collection<Page> p = visited.values();
-		Page[] parr = new Page[p.size()];
-		p.toArray(parr);
-		Arrays.sort(parr);
-		System.out.println("Top 10 links:");
-		for(int i=0;i<10 && i<p.size();i++){
-			System.out.println(parr[i].getIncomingLinks().size()+"\t"+parr[i].getUrl());
-		}
-		return parr[0];
-	}	
 	public Collection<Page> getPages() {
 		return visited.values();
 	}
-	
+
 	
 }

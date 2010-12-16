@@ -1,8 +1,16 @@
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.List;
 
+import learner.ClassifiedTask;
+import learner.ElementClassifier;
+
+import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
@@ -15,29 +23,29 @@ public class Spider {
 		Crawler c = new Crawler();
 		try {
 
-			String url		= 	"http://www.straitstimes.com/BreakingNews/Breaking_News_Top_Stories_20101215.html";
+			String url		= 	
+					
+					"http://www.google.com.sg/search?q=HtmlUnit+logging&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a";
 			
 			String[] xpaths = new String[]{
 					
-					"//div[@id='basecolour_bn']/table[1]/tbody[1]/tr[1]/td[2]/div[1]/div[3]/div[2]//a[1]"
+					"//div[@id='ires']/ol[1]/li/div[1]/span[1]/h3[1]/a[1] ",
+					"//div[@id='ires']/ol[1]/li[contains(concat(' ',@class,' '),' g ')]/div[contains(concat(' ',@class,' '),' vsc ')]/div[contains(concat(' ',@class,' '),' s ')]"
 			
 			};
 			
-			String[] labels = new String[]{
-					"headlines"
+			final String[] labels = new String[]{
+					"parcels_listshow",
+					"parcels_highlight"
 			};
 			
-			c.startCrawl(url,labels,xpaths,3);
-
-/*
-			Learner learner = new Learner(labels,xpaths);
-			Page samplePage = null;
+			ElementClassifier classifier = c.startCrawl(url,labels,xpaths,3);
+			Collection<Page> pages = c.getPages();
 			int count = 0;
-			ElementClassifier classifier = null;
-			boolean onlyPositive = false;
 			
 			for(Page p: pages) {
 				if(p.isWanted()){
+					count++;
 					HtmlPage htmlPage = p.getHtmlPage();
 					HtmlPage sampleHtmlPage = htmlPage;
 					processUrls(sampleHtmlPage);			
@@ -49,17 +57,16 @@ public class Spider {
 					head.appendChild(style);
 					classifier.classifyPageElements(htmlPage,
 							new ClassifiedTask() {
-						public void performTask(DomNode element) {
-							HtmlElement e = (HtmlElement) element;
-							e.setAttribute("class",e.getAttribute("class")+" "+"parcels_listshow");
-						}
-					}
-					);
-
+								public void performTask(int label, DomNode element) {
+									if(label < labels.length){ 
+										HtmlElement e = (HtmlElement) element;
+										e.setAttribute("class",e.getAttribute("class")+" "+labels[label]);
+									}
+								}
+					});
 					try {
 						FileWriter writer = new FileWriter(new File(count+".html"));
 						writer.write(sampleHtmlPage.asXml());
-						count++;
 						System.out.println("Written to file.");
 					} catch (FileNotFoundException e) {
 						// TODO Auto-generated catch block
@@ -72,7 +79,6 @@ public class Spider {
 				}
 			}
 
-		*/
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} 

@@ -32,7 +32,7 @@ public class FeatureExtractor<T extends AbstractData>{
 	private Extractor[] extractors;
 	private AttributeValues globalAttributes;
 	private String[] labels;
-	
+
 	public FeatureExtractor(AttributeValues attributeValues) {
 		globalAttributes = attributeValues;
 		this.labels = attributeValues.getLabels();
@@ -56,7 +56,7 @@ public class FeatureExtractor<T extends AbstractData>{
 			return null;
 		}
 	}
-	
+
 	public Instances createTrainingSet(String name,List<T> extractedDataMaps) {
 		ArrayList<Attribute> attributeList =  globalAttributes.getAttributeList();
 		System.out.println("No. of Attributes: "+attributeList.size());
@@ -70,7 +70,7 @@ public class FeatureExtractor<T extends AbstractData>{
 			Instance instance = new SparseInstance(data.getAttributeSize());
 			fillInstanceWithData(instance,attributeList, null, data);
 			trainingSet.add(instance);
-			
+
 		}
 		return trainingSet;
 	}
@@ -83,14 +83,17 @@ public class FeatureExtractor<T extends AbstractData>{
 	private void extractFromDomNode(List<T> extractedDataMaps,T data, DomNode node,List<HtmlElement>[] selectedItems, boolean onlyPositive) {
 		extractFeatures(data,node);
 		boolean isSelected = false;
-		for(int i=0;i<selectedItems.length;i++){
-			if(selectedItems[i].contains(node)){
-				data.put(CLASS_ATTRIBUTE, labels[i]);
-				isSelected = true;
-				break;
+		//System.out.println(selectedItems);
+		if(selectedItems!=null) {
+			for(int i=0;i<selectedItems.length;i++){
+				if(selectedItems[i].contains(node)){
+					data.put(CLASS_ATTRIBUTE, labels[i]);
+					isSelected = true;
+					break;
+				}
 			}
+			if(!isSelected) data.put(CLASS_ATTRIBUTE, CLASS_ATTRIBUTE_NIL_VALUE);
 		}
-		if(!isSelected) data.put(CLASS_ATTRIBUTE, CLASS_ATTRIBUTE_NIL_VALUE);
 		
 		Iterable<DomNode> nodes = node.getChildNodes();
 		AbstractData parentData = data;
@@ -120,7 +123,7 @@ public class FeatureExtractor<T extends AbstractData>{
 		} else {
 			extractedDataMaps.add(data);
 		}
-		
+
 	}
 	@SuppressWarnings("unchecked")
 	public void extractFromHtmlPage(List<T> extractedDataMaps,HtmlPage page) {
@@ -136,9 +139,9 @@ public class FeatureExtractor<T extends AbstractData>{
 		((ClassifierData)data).setNode(body);	
 		data.setAttributeValues(globalAttributes);
 		extractFromDomNode(extractedDataMaps,data,body,null,false);
-		
+
 	}
-	
+
 	public void extractFromHtmlPage(List<T> extractedDataMaps,HtmlPage page, List<HtmlElement>[] selectedItems, boolean onlyPositive) {
 		classObj = (Class<T>)LearnerData.class;
 		DomNode body = page.getBody();
