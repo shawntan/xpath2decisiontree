@@ -26,13 +26,15 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 
 public class FeatureExtractor<T extends AbstractData>{
+	final private  double RANDOM_PROPORTION = 0.2;
+	
 	public static final String CLASS_ATTRIBUTE = "wanted";
 	public static final String CLASS_ATTRIBUTE_NIL_VALUE = "none";
 	private Class<T> classObj;
 	private Extractor[] extractors;
 	private AttributeValues globalAttributes;
 	private String[] labels;
-
+	
 	public FeatureExtractor(AttributeValues attributeValues) {
 		globalAttributes = attributeValues;
 		this.labels = attributeValues.getLabels();
@@ -70,7 +72,6 @@ public class FeatureExtractor<T extends AbstractData>{
 			Instance instance = new SparseInstance(data.getAttributeSize());
 			fillInstanceWithData(instance,attributeList, null, data);
 			trainingSet.add(instance);
-
 		}
 		return trainingSet;
 	}
@@ -117,21 +118,25 @@ public class FeatureExtractor<T extends AbstractData>{
 				}
 				previousData = currentData;
 			}
-		}
-		if(onlyPositive) {
-			if(isSelected) extractedDataMaps.add(data); 
+		}	
+		if(isSelected) {
+			extractedDataMaps.add(data); 
 		} else {
-			extractedDataMaps.add(data);
+			//negative example
+			double random = Math.random();
+			if(onlyPositive) {
+				if(random < RANDOM_PROPORTION)	extractedDataMaps.add(data);
+			} else {
+				if(random >= RANDOM_PROPORTION) extractedDataMaps.add(data); 
+			}
 		}
-
 	}
 	@SuppressWarnings("unchecked")
 	public void extractFromHtmlPage(List<T> extractedDataMaps,HtmlPage page) {
 		classObj = (Class<T>)ClassifierData.class;
-		List<DomNode> selected= null;
 		DomNode body = page.getBody();
 		T data = (T)new ClassifierData() {
-			@Override
+			private static final long serialVersionUID = 1L;
 			public AbstractData getBodyData() {
 				return this;
 			}
@@ -142,11 +147,12 @@ public class FeatureExtractor<T extends AbstractData>{
 
 	}
 
+	@SuppressWarnings("unchecked")
 	public void extractFromHtmlPage(List<T> extractedDataMaps,HtmlPage page, List<HtmlElement>[] selectedItems, boolean onlyPositive) {
 		classObj = (Class<T>)LearnerData.class;
 		DomNode body = page.getBody();
 		T data = (T)new LearnerData() {
-			@Override
+			private static final long serialVersionUID = 1L;
 			public AbstractData getBodyData() {
 				return this;
 			}

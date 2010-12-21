@@ -29,6 +29,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 public class Crawler implements Serializable {
 	
+	final private double EXAMPLE_RATIO = 0.3;
 	//Required tools
 	private WebClient client;
 	private Learner learner;
@@ -114,7 +115,7 @@ public class Crawler implements Serializable {
 			wantedPages.add(parentPage);
 			double ratio = (double)totalPositiveInstances/collectedInstances;
 			System.out.println("\tTotal +ve instances: " + totalPositiveInstances + " Total instances: "+ collectedInstances+" Ratio: " +ratio);
-			if(ratio >= 0.5) stopCrawling = true;
+			if(ratio >= EXAMPLE_RATIO) stopCrawling = true;
 		}
 		
 	}
