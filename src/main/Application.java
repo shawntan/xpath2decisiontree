@@ -75,9 +75,9 @@ public class Application {
 	public static WebClient getWebClient() {
 		LogFactory.getFactory().setAttribute("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog"); 
 		BrowserVersion version = new BrowserVersion(
-				"Netscape",
-				"5.0 (X11; U; Linux x86_64; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.470.0 Safari/534.3",
-				"Mozilla/5.0 (X11; U; Linux x86_64; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.470.0 Safari/534.3",
+				"Mozilla",
+				"5.0 (X11; en-US)",
+				"Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.13) Gecko/20101211 Firefox/3.5.2",
 				5.0f);
 		WebClient webClient = new WebClient(version);
 		webClient.setAjaxController(new NicelyResynchronizingAjaxController());
