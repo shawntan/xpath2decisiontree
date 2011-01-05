@@ -12,6 +12,7 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.logging.LogFactory;
 
@@ -79,6 +80,7 @@ public class Application {
 				"5.0 (X11; en-US)",
 				"Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.13) Gecko/20101211 Firefox/3.5.2",
 				5.0f);
+		
 		WebClient webClient = new WebClient(version);
 		webClient.setAjaxController(new NicelyResynchronizingAjaxController());
 		webClient.setJavaScriptEnabled(false);
@@ -134,7 +136,7 @@ public class Application {
 	}
 	private static void startScheduledTasks() {
 		taskScheduler = TaskScheduler.getInstance(1);
-		PeriodicDownload.startInitialDownloads();
+		//PeriodicDownload.startInitialDownloads();
 	}
 	private static void startTaskDispatcher() {
 		taskExecutor = TaskExecutor.getInstance(5,5,1000L);

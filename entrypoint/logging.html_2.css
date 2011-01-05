@@ -1,0 +1,320 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+
+
+
+
+
+
+
+
+
+<html>
+  <head>
+    <title>HtmlUnit - 
+        Logging</title>
+    <style type="text/css" media="all">
+      @import url("./css/maven-base.css");
+      @import url("./css/maven-theme.css");
+      @import url("./css/site.css");
+    </style>
+    <link rel="stylesheet" href="./css/print.css" type="text/css" media="print" />
+          <meta name="author" content="Mike Bowler" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      </head>
+  <body class="composite">
+    <div id="banner">
+                  <a href="http://www.GargoyleSoftware.com/" id="bannerLeft"  >
+    
+                                            <img src="images/GargoyleSoftwareLogo.jpg" alt="Gargoyle Software Inc." />
+    
+            </a>
+                        <a href="" id="bannerRight"  >
+    
+            HtmlUnit
+    
+            </a>
+            <div class="clear">
+        <hr/>
+      </div>
+    </div>
+    <div id="breadcrumbs">
+          
+  
+
+  
+    
+    
+  
+    
+            <div class="xleft">
+        Last Published: 05 August 2010
+                  &nbsp;| Version: 2.8
+                      </div>
+            <div class="xright">      
+  
+
+  
+    
+    
+  
+    
+  </div>
+      <div class="clear">
+        <hr/>
+      </div>
+    </div>
+    <div id="leftColumn">
+      <div id="navcolumn">
+           
+  
+
+  
+    
+    
+  
+    
+                   <h5>SourceForge.net</h5>
+            <ul>
+              
+    <li class="none">
+                    <a href="http://www.sourceforge.net/projects/htmlunit" class="externalLink">Project Page</a>
+          </li>
+              
+    <li class="none">
+                    <a href="http://sourceforge.net/project/showfiles.php?group_id=47038" class="externalLink">Download</a>
+          </li>
+          </ul>
+              <h5>How do I...</h5>
+            <ul>
+              
+    <li class="none">
+                    <a href="gettingStarted.html">Get started</a>
+          </li>
+              
+    <li class="none">
+                    <a href="keyboard-howto.html">Use the Keyboard</a>
+          </li>
+              
+    <li class="none">
+                    <a href="table-howto.html">Use Tables</a>
+          </li>
+              
+    <li class="none">
+                    <a href="frame-howto.html">Use Frames</a>
+          </li>
+              
+    <li class="none">
+                    <a href="window-howto.html">Use Windows</a>
+          </li>
+              
+    <li class="none">
+                    <a href="javascript-howto.html">Use JavaScript</a>
+          </li>
+              
+    <li class="none">
+                    <a href="activeX-howto.html">Use ActiveX</a>
+          </li>
+          </ul>
+              <h5>User docs</h5>
+            <ul>
+              
+    <li class="none">
+              <strong>Logging</strong>
+        </li>
+              
+    <li class="none">
+                    <a href="NTLM.html">NTLM authentication</a>
+          </li>
+              
+    <li class="none">
+                    <a href="faq.html">FAQ</a>
+          </li>
+          </ul>
+              <h5>Support</h5>
+            <ul>
+              
+    <li class="none">
+                    <a href="mail-lists.html">Mailing lists</a>
+          </li>
+              
+    <li class="none">
+                    <a href="professionalSupport.html">Professional support</a>
+          </li>
+          </ul>
+              <h5>Developer docs</h5>
+            <ul>
+              
+    <li class="none">
+                    <a href="gettingLatestCode.html">Getting Latest Code</a>
+          </li>
+              
+    <li class="none">
+                    <a href="codingConventions.html">Coding conventions</a>
+          </li>
+              
+    <li class="none">
+                    <a href="submittingBugs.html">Submitting bugs</a>
+          </li>
+              
+    <li class="none">
+                    <a href="submittingJSBugs.html">Submitting JavaScript bugs</a>
+          </li>
+              
+    <li class="none">
+                    <a href="submittingPatches.html">Submitting patches</a>
+          </li>
+              
+    <li class="none">
+                    <a href="javascript.html">JavaScript engine</a>
+          </li>
+              
+    <li class="none">
+                    <a href="packagingARelease.html">Packaging a release</a>
+          </li>
+              
+    <li class="none">
+                    <a href="todo.html">TODO</a>
+          </li>
+          </ul>
+              <h5>Project Documentation</h5>
+            <ul>
+              
+                
+                    
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+              
+        <li class="collapsed">
+                    <a href="project-info.html">Project Information</a>
+                </li>
+              
+                
+                    
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+              
+        <li class="collapsed">
+                    <a href="project-reports.html">Project Reports</a>
+                </li>
+          </ul>
+              <h5>Parent Project</h5>
+            <ul>
+              
+    <li class="none">
+                    <a href="http://nexus.sonatype.org/oss-repository-hosting.html/index.html" class="externalLink">Sonatype OSS Parent</a>
+          </li>
+          </ul>
+                                           <a href="http://maven.apache.org/" title="Built by Maven" class="poweredBy">
+            <img class="poweredBy" 
+                 alt="Built by Maven" 
+                 src="./images/logos/maven-feather.png" 
+                 width="90"
+                 height="30"
+                 border="1" />
+          </a>
+                   <a href="http://sourceforge.net/projects/htmlunit"><img src="http://sflogo.sourceforge.net/sflogo.php?group_id=47038&type=12" width="120" height="30" border="0" alt="Get HtmlUnit at SourceForge.net. Fast, secure and Free Open Source software downloads" /></a>
+           
+  
+
+  
+    
+    
+  
+    
+        </div>
+    </div>
+    <div id="bodyColumn">
+      <div id="contentBox">
+        
+
+    
+        <div class="section"><h2><a name="null"></a></h2>
+            <p>
+                HtmlUnit uses the <a class="externalLink" href="http://jakarta.apache.org/commons/logging/">commons logging</a>
+                package from the <a class="externalLink" href="http://jakarta.apache.org">Apache Jakarta</a> project.  Commons
+                logging is a thin wrapper that sits on top of other logging frameworks such as
+                <a class="externalLink" href="http://jakarta.apache.org/log4j/docs/index.html">LOG4J</a> or
+                <a class="externalLink" href="http://jakarta.apache.org/avalon/logkit/">LogKit</a>.
+            </p>
+            <p>
+                For full details on configuring commons logging, refer to the
+                <a class="externalLink" href="http://jakarta.apache.org/commons/logging/">homepage</a>.
+            </p>
+            <p>
+                If you don't explicitly configure commons logging to use LOG4J or another logging framework
+                then it will use the simple logger.  When using the simple logger, you can change the default
+                logging level by setting the following system property.
+            </p>
+            <div class="source"><pre>System.getProperties().put(&quot;org.apache.commons.logging.simplelog.defaultlog&quot;, &quot;trace&quot;);</pre></div>
+            <p>
+                Valid values for this property are &quot;trace&quot;, &quot;debug&quot;, &quot;info&quot;, &quot;warn&quot;, &quot;error&quot;, or &quot;fatal&quot; (in
+                order from least serious to most serious).
+            </p>
+        </div>
+        <div class="section"><h2>Noteworthy loggers<a name="Noteworthy_loggers"></a></h2>
+            <p>
+				In HtmlUnit, each class has its own log named according to the class's fully qualified name.
+			</p>
+			<p>
+				HtmlUnit uses Apache HttpClient which uses &quot;org.apache.http&quot; to log the headers and wire content,
+				please read more in
+				<a class="externalLink" href="http://hc.apache.org/httpcomponents-client/logging.html">HttpClient Logging Practices</a>
+			</p>
+		</div>
+        <div class="section"><h2>Logging HTML parsing messages<a name="Logging_HTML_parsing_messages"></a></h2>
+        	<p>
+        		The package used to parse the HTML has the ability to report the problems it encounters while parsing source.  
+        		These messages may be programmatically catched or easily logged to the 
+        		&quot;com.gargoylesoftware.htmlunit.html.HTMLParserListener&quot; log for instance by calling:
+        		</p><div class="source"><pre>
+final WebClient webClient = new WebClient();
+webClient.setHTMLParserListener(HTMLParserListenerare.LOG_REPORTER);</pre></div>
+        		The parser (NekoHTML) by default processes the
+        		content that is outside of the BODY and HTML tags. This is seen by the logging reporting that the 
+        		BODY and HTML tags are not closed properly.  This can be changed by calling
+        		'WebClient.setIgnoreOutsideContent(true);'.
+        	
+        </div>
+    
+
+      </div>
+    </div>
+    <div class="clear">
+      <hr/>
+    </div>
+    <div id="footer">
+      <div class="xright">&#169;  
+          2002-2010
+    
+          Gargoyle Software Inc.
+          
+  
+
+  
+    
+    
+  
+    
+  </div>
+      <div class="clear">
+        <hr/>
+      </div>
+    </div>
+  </body>
+</html>

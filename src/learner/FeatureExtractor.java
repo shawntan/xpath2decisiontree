@@ -26,7 +26,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 
 public class FeatureExtractor<T extends AbstractData>{
-	final private  double RANDOM_PROPORTION = 0.2;
+	final private  double RANDOM_PROPORTION = 0.1;
 	
 	public static final String CLASS_ATTRIBUTE = "wanted";
 	public static final String CLASS_ATTRIBUTE_NIL_VALUE = "none";

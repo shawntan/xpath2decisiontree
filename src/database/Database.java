@@ -1,6 +1,11 @@
 package database;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
@@ -40,6 +45,16 @@ public class Database {
 		bds.setUsername(this.username);
 		bds.setPassword(this.password);
 		bds.setUrl(this.url);
+		try {
+			
+			bds.setLogAbandoned(false);
+			bds.setLogWriter(new PrintWriter(new File("db.log")));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return bds;
 	}
 
