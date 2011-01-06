@@ -1,0 +1,9 @@
+#!/bin/bash
+
+
+if [ -e ".pid" ]; then
+	echo "Stopping server..."
+	kill $(cat .pid)
+	rm .pid
+fi;
+ 

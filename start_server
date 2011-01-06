@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ -e ".pid" ]; then
+	./stop_server && sleep 2	
+fi
+echo "Starting server..."
+
+exec java -Xms2048m -Xmx2048m -Dfile.encoding=UTF-8 \
+-classpath \
+./bin:\
+./lib/* \
+main.Application > /dev/null & echo $! > .pid
