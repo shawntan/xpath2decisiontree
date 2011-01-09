@@ -18,9 +18,11 @@ import main.Application;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.ArrayHandler;
+import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 
 import beans.Annotation;
+import beans.Extractor;
 
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.WebClient;
@@ -33,10 +35,10 @@ import processes.tasks.Task;
 public class Scrape implements Task {
 	private static BeanListHandler<Annotation> annotationListHandler = new BeanListHandler<Annotation>(Annotation.class);
 	private static ArrayHandler arrayHandler = new ArrayHandler();
-	private int extractorId;
-	private Connection connection;
-	private QueryRunner queryRunner;
-	private WebClient webClient;
+	 Extractor extractor;
+	Connection connection;
+	QueryRunner queryRunner;
+	WebClient webClient;
 	
 	private String[] urls;
 	List<Annotation> annotations;
@@ -62,12 +64,13 @@ public class Scrape implements Task {
 		}
 	};
 
-	public Scrape(int extractorId){
+	public Scrape(Extractor extractor){
 		try {
 			this.connection = Application.getDataSource().getConnection();
 			this.queryRunner = Application.getQueryRunner();
 			this.webClient = Application.getWebClient();
-			this.extractorId = extractorId;
+			this.extractor = extractor;
+			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -79,12 +82,12 @@ public class Scrape implements Task {
 			this.annotations = queryRunner.query(connection,
 					"SELECT id,xpath FROM annotations WHERE extractor_id = ?",
 					annotationListHandler,
-					extractorId
+					extractor.getId()
 			);
 			this.urls = queryRunner.query(connection,
 					"SELECT url FROM pages WHERE extractor_id = ?",
 					arrayRSHandler,
-					extractorId
+					extractor.getId()
 			);
 			HashMap<Integer, List<HtmlElement>> labelItems = new HashMap<Integer, List<HtmlElement>>(annotations.size());
 			ArrayList<Object[]> valuesToInsert = new ArrayList<Object[]>();
@@ -152,7 +155,7 @@ public class Scrape implements Task {
 		PreparedStatement pstmt = connection.prepareStatement(
 				"INSERT INTO revisions (extractor_id,created_at,updated_at) VALUES (?,NOW(),NOW())",
 				Statement.RETURN_GENERATED_KEYS);
-		pstmt.setInt(1, extractorId);
+		pstmt.setInt(1, extractor.getId());
 		pstmt.executeUpdate();
 		ResultSet rs = pstmt.getGeneratedKeys();
 		rs.next();
