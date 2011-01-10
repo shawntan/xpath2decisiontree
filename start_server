@@ -1,4 +1,5 @@
 #!/bin/bash
+
 if [ -e ".pid" ]; then
 	./stop_server && sleep 2	
 fi
