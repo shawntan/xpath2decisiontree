@@ -1,12 +1,10 @@
 package processes;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import main.Application;
+
 import processes.tasks.ScheduledTask;
 import processes.tasks.Task;
 
@@ -31,16 +29,10 @@ public class TaskScheduler {
     	}
     	return taskScheduler;
     }
-    private Connection dbConnection;
     private ScheduledExecutorService scheduler;
     
     private TaskScheduler(int poolSize) {
 		scheduler = Executors.newScheduledThreadPool(poolSize);
-		try {
-			dbConnection = Application.getDataSource().getConnection();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
 	}
     public void scheduleTask(ScheduledTask task){
     	scheduleTask(task,task.getSecondsToTask());
@@ -48,6 +40,7 @@ public class TaskScheduler {
     
     
     public void scheduleTask(Task task,long timeInSeconds){
+    	System.out.println("scheduled "+ timeInSeconds);
     	scheduler.schedule(
     			new DoLater(task),
     			timeInSeconds,

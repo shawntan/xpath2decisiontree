@@ -32,7 +32,6 @@ public class PeriodicDownload extends DownloadPage implements ScheduledTask{
 			e.printStackTrace();
 		}
 		scheduleNextPage();
-
 	}
 
 	private static void scheduleNextPage() {

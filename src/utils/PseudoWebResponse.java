@@ -13,7 +13,7 @@ import com.gargoylesoftware.htmlunit.util.NameValuePair;
 
 
 
-public class PseudoWebResponse implements WebResponse {
+public class PseudoWebResponse extends WebResponse {
 
 	private InputStream inputStream;
 	private HttpMethod requestMethod = HttpMethod.GET;
