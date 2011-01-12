@@ -1,7 +1,13 @@
 package processes.tasks.extraction;
 
 
+import java.sql.SQLException;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanHandler;
 
 
 import beans.Extractor;
@@ -13,13 +19,18 @@ import processes.tasks.ScheduledTask;
 
 
 public class ScheduledScrape extends Scrape implements ScheduledTask {
+	private static Map<Integer,ScheduledScrape> idScheduledScrapeMap = new HashMap<Integer, ScheduledScrape>();
+	private static BeanHandler<Extractor> beanHandler = new BeanHandler<Extractor>(Extractor.class);
+	
 	private long secondsToTask;
 	private long timeBetweenUpdates = 24*60*60*1000;
 
 	public ScheduledScrape(Extractor extractor) {
 		super(extractor);
+		idScheduledScrapeMap.put(extractor.getId(), this);
 		scheduleNextTime(false);
 	}
+	
 	@Override
 	public void run() {
 		scheduleNextTime(true);
@@ -48,5 +59,28 @@ public class ScheduledScrape extends Scrape implements ScheduledTask {
 		return secondsToTask;
 	}
 
+	
+	private static boolean cancelScheduledScrape(ScheduledScrape s) {
+		if(s!=null) {
+			TaskScheduler.getInstance().cancelTask(s);
+			return true;
+		} else return false;
+	}
+	
+	public static void rescheduleScrape(int extractorId) {
+		ScheduledScrape s= idScheduledScrapeMap.get(extractorId);
+		if(s!=null) {
+			cancelScheduledScrape(s);
+			try {
+				s.extractor = s.queryRunner.query(
+						"SELECT id,domain, update_time as updateTime FROM extractors WHERE id = ?",
+						beanHandler,
+						extractorId
+						);
+			} catch (SQLException e) {e.printStackTrace();}
+			s.scheduleNextTime(false);
+			TaskScheduler.getInstance().scheduleTask(s);
+		}
 
+	}
 }
