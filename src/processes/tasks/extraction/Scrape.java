@@ -15,6 +15,7 @@ import java.util.List;
 
 import main.Application;
 
+import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.ArrayHandler;
@@ -34,15 +35,13 @@ import processes.tasks.Task;
 
 public class Scrape implements Task {
 	private static BeanListHandler<Annotation> annotationListHandler = new BeanListHandler<Annotation>(Annotation.class);
-	private static ArrayHandler arrayHandler = new ArrayHandler();
-	 Extractor extractor;
-	Connection connection;
-	QueryRunner queryRunner;
-	WebClient webClient;
-	
+	private Extractor extractor;
+	private QueryRunner queryRunner;
+	private WebClient webClient;
+
 	private String[] urls;
-	List<Annotation> annotations;
-	
+	private List<Annotation> annotations;
+
 	private static HashMap<String, String> normalisableTags;
 	static {
 		normalisableTags  = new HashMap<String, String>();
@@ -56,42 +55,39 @@ public class Scrape implements Task {
 			String[] urls = new String[rs.getRow()];
 			rs.first();
 			int i = 0;
-			do{
+			do {
 				urls[i] = rs.getString(1);
 				i++;
-			}while(rs.next());
+			} while(rs.next());
 			return urls;
 		}
 	};
 
 	public Scrape(Extractor extractor){
-		try {
-			this.connection = Application.getDataSource().getConnection();
-			this.queryRunner = Application.getQueryRunner();
-			this.webClient = Application.getWebClient();
-			this.extractor = extractor;
-			
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		this.queryRunner = Application.getQueryRunner();
+		this.webClient = Application.getWebClient();
+		this.extractor = extractor;
 	}
 
 	public void run() {
 		try {
-			this.annotations = queryRunner.query(connection,
+			this.annotations = queryRunner.query(
 					"SELECT id,xpath FROM annotations WHERE extractor_id = ?",
 					annotationListHandler,
 					extractor.getId()
 			);
-			this.urls = queryRunner.query(connection,
+			this.urls = queryRunner.query(
 					"SELECT url FROM pages WHERE extractor_id = ?",
 					arrayRSHandler,
 					extractor.getId()
 			);
+			extractor.setAnnotations(this.annotations);
+			extractor.setUrls(this.urls);
+
+
 			HashMap<Integer, List<HtmlElement>> labelItems = new HashMap<Integer, List<HtmlElement>>(annotations.size());
 			ArrayList<Object[]> valuesToInsert = new ArrayList<Object[]>();
-			
+
 
 			int lastRevisionId = createRevision();
 			System.out.println(lastRevisionId);
@@ -105,7 +101,7 @@ public class Scrape implements Task {
 					selectedElements[i] = (List<HtmlElement>)page.getByXPath(annotation.getXpath());
 					i++;
 				}
-				
+
 				Iterator<HtmlElement> elements = page.getHtmlElementDescendants().iterator();
 				while(elements.hasNext()) {
 					HtmlElement e = elements.next();
@@ -123,13 +119,13 @@ public class Scrape implements Task {
 					values[j] = valuesToInsert.get(j);
 				}
 
-				queryRunner.batch(connection,
+				queryRunner.batch(
 						"INSERT INTO scraped_values (annotation_id,value,created_at,updated_at,revision_id) VALUES (?,?,?,?,?)",
 						values
-						);
+				);
 			}
-			
-			
+
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (FailingHttpStatusCodeException e) {
@@ -152,6 +148,7 @@ public class Scrape implements Task {
 		}
 	}
 	private int createRevision() throws SQLException{
+		Connection connection = Application.getDataSource().getConnection();
 		PreparedStatement pstmt = connection.prepareStatement(
 				"INSERT INTO revisions (extractor_id,created_at,updated_at) VALUES (?,NOW(),NOW())",
 				Statement.RETURN_GENERATED_KEYS);
@@ -160,6 +157,9 @@ public class Scrape implements Task {
 		ResultSet rs = pstmt.getGeneratedKeys();
 		rs.next();
 		int lastRevisionId = rs.getInt(1);
+		rs.close();
+		pstmt.close();
+		connection.close();
 		return lastRevisionId;
 	}
 	@Override

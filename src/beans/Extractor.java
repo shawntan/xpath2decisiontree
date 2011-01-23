@@ -1,12 +1,16 @@
 package beans;
 
 import java.util.Date;
+import java.util.List;
 
 public class Extractor {
 	private int id;
 	private int userId;
 	private String domain;
 	private Date updateTime;
+	private String[] urls;
+	private List<Annotation> annotations;
+	
 	public int getId() {
 		return id;
 	}
@@ -30,5 +34,17 @@ public class Extractor {
 	}
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
+	}
+	public String[] getUrls() {
+		return urls;
+	}
+	public void setUrls(String[] urls) {
+		this.urls = urls;
+	}
+	public List<Annotation> getAnnotations() {
+		return annotations;
+	}
+	public void setAnnotations(List<Annotation> annotations) {
+		this.annotations = annotations;
 	}
 }

@@ -9,4 +9,4 @@ exec java -Xms2048m -Xmx2048m -Dfile.encoding=UTF-8 \
 -classpath \
 ./bin:\
 ./lib/* \
-main.Application > /dev/null & echo $! > .pid
+main.Application > server.log & echo $! > .pid

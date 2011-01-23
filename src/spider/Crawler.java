@@ -17,6 +17,7 @@ import weka.classifiers.Classifier;
 
 
 import learner.ElementClassifier;
+import learner.FeatureExtractor;
 import learner.Learner;
 import main.Application;
 
@@ -29,7 +30,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 public class Crawler implements Serializable {
 	
-	final private double EXAMPLE_RATIO = 0.3;
+	
 	//Required tools
 	private WebClient client;
 	private Learner learner;
@@ -41,13 +42,12 @@ public class Crawler implements Serializable {
 	private Collection<Page> wantedPages;
 
 	//Seed Data
-	private URL startUrl;
+	private URL[] startUrls;
 	private String[] xpaths;
 
 	//Flow control
 	private int totalPositiveInstances;
 	private boolean stopCrawling = false;
-	private boolean onlyPositive = false;
 	
 	
 	public Crawler() {
@@ -56,19 +56,19 @@ public class Crawler implements Serializable {
 		client.setTimeout(3000);
 	}
 	
-	public ElementClassifier startCrawl(String startUrl,String[] labels, String[] xpaths, int depth) throws MalformedURLException {
+	public ElementClassifier startCrawl(String[] startUrls,String[] labels, String[] xpaths, int depth) throws MalformedURLException {
 		this.xpaths 		= xpaths;
-		this.startUrl		= new URL(startUrl);
+		this.startUrls		= new URL[startUrls.length];	
 		this.learner 		= new Learner(labels,xpaths);
 		this.downloadQueue 	= new PriorityQueue<Page>();
 		this.visited 		= new TreeMap<String,Page>(); 
 		this.wantedPages 	= new HashSet<Page>();
-
-		Page p = new Page(this.wantedPages,this.startUrl,0);
-		
-		visited.put(this.startUrl.toString(),p);
-		downloadQueue.add(p);
-		
+		for(int i=0;i<startUrls.length;i++){
+			this.startUrls[i]=new URL(startUrls[i]);
+			Page p = new Page(this.wantedPages,this.startUrls[i],0);
+			visited.put(this.startUrls[i].toString(),p);
+			downloadQueue.add(p);
+		}	
 		crawl();
 		
 		//Think about this. Needed?
@@ -103,19 +103,20 @@ public class Crawler implements Serializable {
 	private void processPage(Page parentPage){
 		
 		processLinks(parentPage);
-		extractPageData(parentPage);
+		int positiveCount = extractPageData(parentPage);
 		
 		if(parentPage.isWanted()) {	
+			
 			int collectedInstances = learner.feedTrainingData(
 					parentPage.getHtmlPage(),
 					parentPage.getWantedElements(),
-					onlyPositive
+					positiveCount
 			);
-			onlyPositive = true;
-			wantedPages.add(parentPage);
 			double ratio = (double)totalPositiveInstances/collectedInstances;
+			wantedPages.add(parentPage);
 			System.out.println("\tTotal +ve instances: " + totalPositiveInstances + " Total instances: "+ collectedInstances+" Ratio: " +ratio);
-			if(ratio >= EXAMPLE_RATIO) stopCrawling = true;
+			if(ratio >= FeatureExtractor.EXAMPLE_RATIO && collectedInstances > 500) stopCrawling = true;
+			
 		}
 		
 	}
@@ -128,7 +129,7 @@ public class Crawler implements Serializable {
 	private void processLink(HtmlAnchor a, Page parentPage){
 		try {
 			URL url = CrawlerUtils.linkToUrl(a);
-			if(url.getHost().equals(this.startUrl.getHost())){
+			if(url.getHost().equals(this.startUrls[0].getHost())){
 				Page page = visited.get(url.toString());
 				if(page==null){
 					page = new Page(this.wantedPages,url, parentPage.getDepth()+1); 
@@ -144,19 +145,20 @@ public class Crawler implements Serializable {
 		}
 	}
 	@SuppressWarnings("unchecked")
-	private void extractPageData(Page p){
+	private int extractPageData(Page p){
 		int count = 0;
 		List<HtmlElement>[] wantedElements = (List<HtmlElement>[])new List[xpaths.length];
 		for(int i=0; i<xpaths.length;i++){
 			wantedElements[i] = (List<HtmlElement>)p.getHtmlPage().getByXPath(xpaths[i]);
 			if(wantedElements[i]==null || wantedElements[i].isEmpty()){
 				p.setHtmlPage(null);
-				return;
+				return -1;
 			}
 			count+=wantedElements[i].size();
 		}
 		p.setWantedElements(wantedElements);
 		totalPositiveInstances += count;
+		return count;
 	}
 
 	public Collection<Page> getPages() {

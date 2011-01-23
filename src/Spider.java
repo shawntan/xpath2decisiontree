@@ -1,6 +1,7 @@
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -50,7 +51,12 @@ public class Spider {
 					"parcels_highlight"
 			};
 			
-			ElementClassifier classifier = c.startCrawl(url,labels,xpaths,3);
+			
+			ElementClassifier classifier = c.startCrawl(new String[]{url},labels,xpaths,3);
+			FileOutputStream fos = new FileOutputStream(new File("cls.model"));
+			classifier.writeToStream(fos);
+			fos.close();
+			
 			Collection<Page> pages = c.getPages();
 			int count = 0;
 			

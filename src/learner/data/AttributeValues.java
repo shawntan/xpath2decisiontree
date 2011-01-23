@@ -17,7 +17,7 @@ import weka.core.Attribute;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 
 
-public class AttributeValues extends HashMap<String, AttributeValues.AttributeValuePair> {
+public class AttributeValues extends HashMap<String, AttributeValues.AttributeValuePair> implements Serializable{
 	ArrayList<Attribute> attributeList;
 	private String[] labels;
 	
@@ -206,11 +206,6 @@ public class AttributeValues extends HashMap<String, AttributeValues.AttributeVa
 			addWithNoRepeat(avp.values, stringify(value));
 		}
 	}
-
-
-
-
-
 	public String[] getLabels() {
 		return labels;
 	}
