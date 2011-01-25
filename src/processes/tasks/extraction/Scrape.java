@@ -35,8 +35,8 @@ import processes.tasks.Task;
 
 public class Scrape implements Task {
 	private static BeanListHandler<Annotation> annotationListHandler = new BeanListHandler<Annotation>(Annotation.class);
-	private Extractor extractor;
-	private QueryRunner queryRunner;
+	Extractor extractor;
+	QueryRunner queryRunner;
 	private WebClient webClient;
 
 	private String[] urls;
