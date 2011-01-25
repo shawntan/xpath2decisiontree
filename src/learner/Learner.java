@@ -44,9 +44,9 @@ public class Learner {
 
 
 	
-	public int feedTrainingData(HtmlPage page, List<HtmlElement>[] selectedItems, boolean onlyPositive) {
+	public int feedTrainingData(HtmlPage page, List<HtmlElement>[] selectedItems,int positiveCount) {
 		if(extractedDataMaps == null) extractedDataMaps = new LinkedList<LearnerData>();
-		featureExtractor.extractFromHtmlPage(extractedDataMaps, page, selectedItems, onlyPositive);
+		featureExtractor.extractFromHtmlPage(extractedDataMaps, page, selectedItems,positiveCount);
 		return extractedDataMaps.size();
 	}
 

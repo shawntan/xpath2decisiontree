@@ -26,7 +26,6 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 
 public class FeatureExtractor<T extends AbstractData>{
-	final private  double RANDOM_PROPORTION = 0.1;
 	
 	public static final String CLASS_ATTRIBUTE = "wanted";
 	public static final String CLASS_ATTRIBUTE_NIL_VALUE = "none";
@@ -34,6 +33,9 @@ public class FeatureExtractor<T extends AbstractData>{
 	private Extractor[] extractors;
 	private AttributeValues globalAttributes;
 	private String[] labels;
+	final public static double EXAMPLE_RATIO = 0.3;
+	private double naturalRatio = 0.0;
+	private double correctiveRatio = 0.0;
 	
 	public FeatureExtractor(AttributeValues attributeValues) {
 		globalAttributes = attributeValues;
@@ -81,7 +83,7 @@ public class FeatureExtractor<T extends AbstractData>{
 			e.extractFeature(data, n);
 		}
 	}
-	private void extractFromDomNode(List<T> extractedDataMaps,T data, DomNode node,List<HtmlElement>[] selectedItems, boolean onlyPositive) {
+	private void extractFromDomNode(List<T> extractedDataMaps,T data, DomNode node,List<HtmlElement>[] selectedItems) {
 		extractFeatures(data,node);
 		boolean isSelected = false;
 		//System.out.println(selectedItems);
@@ -109,8 +111,7 @@ public class FeatureExtractor<T extends AbstractData>{
 						extractedDataMaps,
 						currentData,
 						n,
-						selectedItems,
-						onlyPositive
+						selectedItems
 				);
 				if(previousData != null) {
 					previousData.setNextData(currentData);
@@ -124,11 +125,8 @@ public class FeatureExtractor<T extends AbstractData>{
 		} else {
 			//negative example
 			double random = Math.random();
-			if(onlyPositive) {
-				if(random < RANDOM_PROPORTION)	extractedDataMaps.add(data);
-			} else {
-				if(random >= RANDOM_PROPORTION) extractedDataMaps.add(data); 
-			}
+			if(random<correctiveRatio) extractedDataMaps.add(data);
+
 		}
 	}
 	@SuppressWarnings("unchecked")
@@ -143,14 +141,24 @@ public class FeatureExtractor<T extends AbstractData>{
 		};
 		((ClassifierData)data).setNode(body);	
 		data.setAttributeValues(globalAttributes);
-		extractFromDomNode(extractedDataMaps,data,body,null,false);
+		extractFromDomNode(extractedDataMaps,data,body,null);
 
 	}
 
 	@SuppressWarnings("unchecked")
-	public void extractFromHtmlPage(List<T> extractedDataMaps,HtmlPage page, List<HtmlElement>[] selectedItems, boolean onlyPositive) {
+	public void extractFromHtmlPage(List<T> extractedDataMaps,HtmlPage page, List<HtmlElement>[] selectedItems,int positiveCount) {
 		classObj = (Class<T>)LearnerData.class;
 		DomNode body = page.getBody();
+		if(naturalRatio == 0.0) {
+			Iterable<DomNode> descendants = body.getDescendants();
+			int totalCount =0;
+			for(DomNode e:descendants)totalCount++;
+			int negativeCount = totalCount-positiveCount;
+			correctiveRatio = 
+				(positiveCount*(1-FeatureExtractor.EXAMPLE_RATIO))/
+				(negativeCount*FeatureExtractor.EXAMPLE_RATIO);
+		}
+
 		T data = (T)new LearnerData() {
 			private static final long serialVersionUID = 1L;
 			public AbstractData getBodyData() {
@@ -158,7 +166,7 @@ public class FeatureExtractor<T extends AbstractData>{
 			}
 		};
 		data.setAttributeValues(globalAttributes);
-		extractFromDomNode(extractedDataMaps,data,body,selectedItems, onlyPositive);
+		extractFromDomNode(extractedDataMaps,data,body,selectedItems);
 		System.out.println("Size of dataset: "+extractedDataMaps.size());
 	}
 	private int fillInstanceWithData(Instance instance,ArrayList<Attribute> attributeList,String prefix,AbstractData data){

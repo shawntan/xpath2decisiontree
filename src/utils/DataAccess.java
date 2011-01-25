@@ -12,10 +12,12 @@ import java.util.List;
 
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 
 import main.Application;
 
+import beans.Extractor;
 import beans.Page;
 
 import com.gargoylesoftware.htmlunit.WebClient;
@@ -56,12 +58,26 @@ public class DataAccess {
 	public static Page retrievePage(Connection con,int id){
 		QueryRunner run = Application.getQueryRunner();
 		try {
-			List<Page> pages = run.query(
+			Page pages = run.query(
 					con,
 					"SELECT * FROM pages WHERE id = ?",
-					new BeanListHandler<Page>(Page.class),
+					new BeanHandler<Page>(Page.class),
 					id);
-			return pages.get(0);
+			return pages;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	public static Extractor retrieveExtractor( int id) {
+		QueryRunner run = Application.getQueryRunner();
+		try {
+			Extractor e = run.query(
+					"SELECT id,domain, update_time as updateTime FROM extractors WHERE id = ?",
+					new BeanHandler<Extractor>(Extractor.class),
+					id
+			);
+			return e;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
