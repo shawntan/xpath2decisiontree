@@ -1,9 +1,12 @@
 #Last changed: Mon Jan 31 14:56:19 SGT 2011
 #Mon Jan 31 14:56:19 SGT 2011
 threadPoolSize=5
-databasePass=
+>>>>>>>=033f760df43eeb63871031d3859b825288278f12
+databasePass=parcels
 databaseHost=localhost
+<<<<<<<=HEAD
 databaseName=parcels_development
 databasePort=3306
 httpServerPort=10600
-databaseUser=root
+databaseUser=shawntan
+=\=\=\=\=\=\=
