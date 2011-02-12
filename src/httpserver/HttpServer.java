@@ -111,7 +111,7 @@ public class HttpServer implements Container{
 	public void handle(Request request, Response response) {
 		try {
 			String actionTarget = request.getPath().toString().toLowerCase();
-			System.out.println(actionTarget);
+			System.out.println(request.getAddress());
 			Map query = request.getQuery();
 			Object controller = instanceMap.get(actionTarget);
 			if(controller == null) {

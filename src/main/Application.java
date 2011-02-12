@@ -157,7 +157,8 @@ public class Application {
 					new BeanListHandler<Extractor>(Extractor.class));
 			TaskScheduler ts = TaskScheduler.getInstance();
 			for(Extractor e:extractors) {
-				ts.scheduleTask(new ScheduledScrape(e));
+				if(e.getUpdateTime()!=null)
+					ts.scheduleTask(new ScheduledScrape(e));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

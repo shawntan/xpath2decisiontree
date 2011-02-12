@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,9 +28,12 @@ import beans.Extractor;
 
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
 
+import processes.TaskExecutor;
 import processes.tasks.Task;
 
 
@@ -43,11 +47,23 @@ public class Scrape implements Task {
 	private List<Annotation> annotations;
 
 	private static HashMap<String, String> normalisableTags;
+	private static List<String> tableTags;
 	static {
 		normalisableTags  = new HashMap<String, String>();
 		normalisableTags.put("a","href");
 		normalisableTags.put("img","src");
+		String[] ttags = new String[] {
+				"table",
+				"tbody",
+				"thead",
+				"tr",
+				"td"
+		};
+		tableTags = Arrays.asList(ttags);
 	}
+
+	private int lastRevisionId = -1;
+	private int retries = 0;
 
 	private static ResultSetHandler<String[]> arrayRSHandler = 	new ResultSetHandler<String[]> (){
 		public String[] handle(ResultSet rs)throws SQLException {
@@ -85,11 +101,9 @@ public class Scrape implements Task {
 			extractor.setUrls(this.urls);
 
 
-			HashMap<Integer, List<HtmlElement>> labelItems = new HashMap<Integer, List<HtmlElement>>(annotations.size());
+			//HashMap<Integer, List<HtmlElement>> labelItems = new HashMap<Integer, List<HtmlElement>>(annotations.size());
 			ArrayList<Object[]> valuesToInsert = new ArrayList<Object[]>();
-
-
-			int lastRevisionId = createRevision();
+			if(lastRevisionId == -1) lastRevisionId = createRevision();
 			System.out.println(lastRevisionId);
 			for(String url:urls) {
 				HtmlPage page = webClient.getPage(url);
@@ -103,26 +117,26 @@ public class Scrape implements Task {
 				}
 
 				Iterator<HtmlElement> elements = page.getHtmlElementDescendants().iterator();
+				HtmlElement e;
+				Date timeNow = new Date();
 				while(elements.hasNext()) {
-					HtmlElement e = elements.next();
+					e = elements.next();
 					for(int j=0;j<selectedElements.length;j++) {
 						if(selectedElements[j].contains(e)){
-							processTag(e);
-							Date timeNow = new Date();
+							e = processTag(e,page);
 							valuesToInsert.add(new Object[] {ids[j],e.asXml(),timeNow,timeNow,lastRevisionId});
 							break;
 						}
 					}
 				}
 				Object[][] values = new Object[valuesToInsert.size()][valuesToInsert.get(0).length];
-				for(int j=0;j<values.length;j++){
-					values[j] = valuesToInsert.get(j);
-				}
-
+				for(int j=0;j<values.length;j++) values[j] = valuesToInsert.get(j);
 				queryRunner.batch(
 						"INSERT INTO scraped_values (annotation_id,value,created_at,updated_at,revision_id) VALUES (?,?,?,?,?)",
 						values
 				);
+				lastRevisionId = -1;
+				retries = 0;
 			}
 
 
@@ -133,11 +147,15 @@ public class Scrape implements Task {
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
-			e.printStackTrace();
+			if(retries < 3) {
+				retries++;
+				TaskExecutor.getInstance().queueTask(this);
+			}
 		}
 	}
-	private void processTag(HtmlElement e) {
+	private HtmlElement processTag(HtmlElement e,HtmlPage p){
 		String attributeName = normalisableTags.get(e.getTagName());
+		//normalise urls
 		if(attributeName!=null) {
 			String url = e.getAttribute(attributeName);
 			try {
@@ -146,9 +164,29 @@ public class Scrape implements Task {
 			} catch (MalformedURLException e1) {
 			}
 		}
+		HtmlElement old = e;
+		e = replaceTable(e,p);
+		old.getParentNode().insertBefore(e,old);
+		//old.getParentNode().removeChild(e);
+		return e;
 	}
+	private HtmlElement replaceTable(HtmlElement e,HtmlPage p) {
+		HtmlElement replacement = e;
+		if(tableTags.contains(e.getTagName().toLowerCase())) {
+			replacement = p.createElement("div");
+			Iterator<DomNode> dom = e.getChildren().iterator();
+			DomNode n;
+			while(dom.hasNext()){
+				n = dom.next();
+				if(n instanceof HtmlElement) n = replaceTable((HtmlElement)n,p);
+				replacement.appendChild(n);
+			}
+		}
+		return replacement;
+	}
+
 	private int createRevision() throws SQLException{
-		Connection connection = Application.getDataSource().getConnection();
+		Connection connection = Application.getDataSource().getConnection();	
 		PreparedStatement pstmt = connection.prepareStatement(
 				"INSERT INTO revisions (extractor_id,created_at,updated_at) VALUES (?,NOW(),NOW())",
 				Statement.RETURN_GENERATED_KEYS);

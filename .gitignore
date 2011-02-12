@@ -1,5 +1,7 @@
 lib
+bin
 settings.properties
-*.html
 .pid
 *.log
+*.html
+*~

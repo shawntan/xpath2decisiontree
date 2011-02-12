@@ -6,7 +6,6 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 
 
@@ -14,6 +13,7 @@ import beans.Extractor;
 
 import processes.TaskScheduler;
 import processes.tasks.ScheduledTask;
+import utils.DataAccess;
 
 
 
@@ -76,11 +76,12 @@ public class ScheduledScrape extends Scrape implements ScheduledTask {
 						"SELECT id,domain, update_time as updateTime FROM extractors WHERE id = ?",
 						beanHandler,
 						extractorId
-						);
+				);
 			} catch (SQLException e) {e.printStackTrace();}
-			s.scheduleNextTime(false);
-			TaskScheduler.getInstance().scheduleTask(s);
-		}
 
+		} else {
+			s = new ScheduledScrape(DataAccess.retrieveExtractor(extractorId));
+		}
+		TaskScheduler.getInstance().scheduleTask(s);
 	}
 }
