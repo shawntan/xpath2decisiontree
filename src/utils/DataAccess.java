@@ -26,6 +26,7 @@ import com.gargoylesoftware.htmlunit.html.HTMLParser;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 public class DataAccess {
+	/*
 	public static HtmlPage retrieveHtmlPage(Connection con,Page page){
 		try {
 			
@@ -55,6 +56,7 @@ public class DataAccess {
 		}
 		return null;
 	}
+	*/
 	public static Page retrievePage(Connection con,int id){
 		QueryRunner run = Application.getQueryRunner();
 		try {
@@ -84,17 +86,4 @@ public class DataAccess {
 		return null;
 	}
 	
-	public static void main(String[] args) {
-		Application.loadSettings();
-		Connection con;
-		try {
-			con = Application.getDataSource().getConnection();
-			Page page = DataAccess.retrievePage(con,52);
-			HtmlPage htmlPage = DataAccess.retrieveHtmlPage(con,page);
-			//System.out.println(htmlPage.asXml());
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
 }
