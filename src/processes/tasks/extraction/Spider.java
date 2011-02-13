@@ -2,7 +2,6 @@ package processes.tasks.extraction;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.net.MalformedURLException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,7 +14,6 @@ import learner.ElementClassifier;
 import main.Application;
 
 import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.ResultSetHandler;
 
 
 import beans.Annotation;
@@ -54,7 +52,7 @@ public class Spider implements Task {
 		try {
 			ElementClassifier classifier = crawler.startCrawl(startUrls, ids, xpaths, 3);
 			saveClassifierModel(classifier);
-			loadClassifierModel(extractor);
+			//loadClassifierModel(extractor);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}

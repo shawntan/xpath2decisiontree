@@ -1,5 +1,6 @@
 package spider;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.MalformedURLException;
@@ -12,6 +13,10 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.TreeMap;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import weka.classifiers.Classifier;
 
@@ -49,6 +54,17 @@ public class Crawler implements Serializable {
 	private int totalPositiveInstances;
 	private boolean stopCrawling = false;
 	
+	private static Logger logger;
+	static {
+		try {
+			new File("spider.log");
+			logger = Logger.getLogger("crawler");
+			FileHandler fh = new FileHandler("spider.log");
+			SimpleFormatter formatter = new SimpleFormatter();
+			fh.setFormatter(formatter);
+			logger.addHandler(fh);
+		} catch (Exception e) {	e.printStackTrace();}
+	};
 	
 	public Crawler() {
 		Application.loadSettings();
@@ -72,7 +88,7 @@ public class Crawler implements Serializable {
 		crawl();
 		
 		//Think about this. Needed?
-		System.out.println("Creating classifier...");
+		logger.log(Level.INFO,"Creating classifier...");
 		return learner.createClassifier();
 	}
 
@@ -80,7 +96,7 @@ public class Crawler implements Serializable {
 		while(!downloadQueue.isEmpty() && !stopCrawling){
 			Page p = downloadQueue.poll();
 			try {
-				System.out.println(
+				logger.log(Level.INFO,
 						" Links left:"+downloadQueue.size() +
 						" Depth: "+p.getDepth() + 
 						" Score: "+ p.getScore()+
@@ -90,14 +106,14 @@ public class Crawler implements Serializable {
 				p.setHtmlPage(htmlPage);
 				processPage(p);
 			} catch (FailingHttpStatusCodeException e) {
-				System.out.println("Failed.");
+				logger.log(Level.WARNING,e.getMessage());
 			} catch (IOException e) {
-				System.out.println("Retry?");
+				logger.log(Level.WARNING,e.getMessage());
 			} catch (ClassCastException e) {
-				System.out.println("This is feed lah!");
+				logger.log(Level.WARNING,"Not HTML.");
 			}
 		}
-		System.out.println("\"And we are done.\" - Sanjay Jain");
+		logger.log(Level.INFO,"Done crawling");
 	}
 
 	private void processPage(Page parentPage){
@@ -114,7 +130,7 @@ public class Crawler implements Serializable {
 			);
 			double ratio = (double)totalPositiveInstances/collectedInstances;
 			wantedPages.add(parentPage);
-			System.out.println("\tTotal +ve instances: " + totalPositiveInstances + " Total instances: "+ collectedInstances+" Ratio: " +ratio);
+			logger.log(Level.INFO,"\tTotal +ve instances: " + totalPositiveInstances + " Total instances: "+ collectedInstances+" Ratio: " +ratio);
 			if(ratio >= FeatureExtractor.EXAMPLE_RATIO && collectedInstances > 500) stopCrawling = true;
 			
 		}

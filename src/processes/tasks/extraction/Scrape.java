@@ -1,6 +1,5 @@
 package processes.tasks.extraction;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.sql.Connection;
@@ -21,11 +20,8 @@ import java.util.logging.SimpleFormatter;
 
 import main.Application;
 
-import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
-import org.apache.commons.dbutils.handlers.ArrayHandler;
-import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 
 import beans.Annotation;
@@ -36,9 +32,9 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
 
 import processes.TaskExecutor;
+import processes.TaskScheduler;
 import processes.tasks.Task;
 
 
@@ -228,6 +224,7 @@ public class Scrape implements Task {
 				}
 				page = null;
 			}
+			TaskExecutor.getInstance().queueTask(new Spider(extractor));
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, e.getMessage());
 		} catch (FailingHttpStatusCodeException e) {
