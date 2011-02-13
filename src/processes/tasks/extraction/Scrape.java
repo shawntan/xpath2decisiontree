@@ -190,7 +190,6 @@ public class Scrape implements Task {
 		return values;
 	}
 	private void traverseDOM(HtmlElement parent, List<HtmlElement>[] selectedElements, ArrayList<Object[]> valuesToInsert, HtmlPage page, Date timeNow) {
-		System.out.println(parent.getTagName());
 		DomNode e = parent.getFirstChild();
 		HtmlElement el = null;
 		if(e!=null) {
