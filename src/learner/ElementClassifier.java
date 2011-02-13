@@ -50,9 +50,10 @@ public class ElementClassifier implements Serializable  {
 	public void classifyPageElements(HtmlPage page,ClassifiedTask task) {
 		ArrayList<ClassifierData> dataList = new ArrayList<ClassifierData>();
 		classifierExtractor.extractFromHtmlPage(dataList, page);
+		System.out.println("dataList size:" +dataList.size());
 		Instances instances = classifierExtractor.createTrainingSet("", dataList);
 		int instanceSize = instances.numInstances();
-		int passCount = 0;
+		
 		try {
 			for(int i=0;i<instanceSize;i++) {
 				Instance instance = instances.get(i);
@@ -65,6 +66,5 @@ public class ElementClassifier implements Serializable  {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println(passCount);
 	}
 }

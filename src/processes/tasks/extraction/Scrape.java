@@ -14,7 +14,6 @@ import java.util.logging.SimpleFormatter;
 import main.Application;
 
 import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.handlers.BeanListHandler;
 
 import beans.Annotation;
 import beans.Extractor;
@@ -32,7 +31,6 @@ import processes.tasks.Task;
 
 public class Scrape implements Task {
 	private static Logger logger;
-	private static BeanListHandler<Annotation> annotationListHandler = new BeanListHandler<Annotation>(Annotation.class);
 	static {
 		try {
 			logger = Logger.getLogger("scraper");
@@ -68,16 +66,16 @@ public class Scrape implements Task {
 	private void reloadExtractor() throws SQLException {
 		List<Annotation> annotationList = queryRunner.query(
 				"SELECT id,xpath FROM annotations WHERE extractor_id = ?",
-				annotationListHandler,
+				ScrapeHelper.annotationListHandler,
 				extractor.getId()
 		);
-		annotations = annotationList.toArray(new Annotation[annotationList.size()]);
+		this.annotations = annotationList.toArray(new Annotation[annotationList.size()]);
 		this.urls = queryRunner.query(
 				"SELECT url FROM pages WHERE extractor_id = ?",
 				ScrapeHelper.arrayRSHandler,
 				extractor.getId()
 		);
-		extractor.setAnnotations(annotationList);
+		extractor.setAnnotations(annotations);
 		extractor.setUrls(this.urls);
 	}
 	private void buildBatchInsert(int revisionId, HtmlPage page, List<HtmlElement>[] selectedElements,List<Object[]> valuesToInsert) {

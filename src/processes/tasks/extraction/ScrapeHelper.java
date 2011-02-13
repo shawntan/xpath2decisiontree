@@ -15,9 +15,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.dbutils.handlers.BeanListHandler;
 
 import main.Application;
 
+import beans.Annotation;
 import beans.Extractor;
 
 import com.gargoylesoftware.htmlunit.WebClient;
@@ -106,7 +108,7 @@ public class ScrapeHelper {
 		return page;
 	}
 
-	public static ResultSetHandler<String[]> arrayRSHandler = 	new ResultSetHandler<String[]> (){
+	final public static ResultSetHandler<String[]> arrayRSHandler = 	new ResultSetHandler<String[]> (){
 		public String[] handle(ResultSet rs)throws SQLException {
 			rs.last();
 			String[] urls = new String[rs.getRow()];
@@ -119,5 +121,6 @@ public class ScrapeHelper {
 			return urls;
 		}
 	};
+	final public static BeanListHandler<Annotation> annotationListHandler = new BeanListHandler<Annotation>(Annotation.class);
 
 }

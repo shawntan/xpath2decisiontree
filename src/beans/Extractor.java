@@ -9,7 +9,7 @@ public class Extractor {
 	private String domain;
 	private Date updateTime;
 	private String[] urls;
-	private List<Annotation> annotations;
+	private Annotation[] annotations;
 	
 	public int getId() {
 		return id;
@@ -41,10 +41,10 @@ public class Extractor {
 	public void setUrls(String[] urls) {
 		this.urls = urls;
 	}
-	public List<Annotation> getAnnotations() {
+	public Annotation[] getAnnotations() {
 		return annotations;
 	}
-	public void setAnnotations(List<Annotation> annotations) {
+	public void setAnnotations(Annotation[] annotations) {
 		this.annotations = annotations;
 	}
 }

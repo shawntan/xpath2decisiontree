@@ -119,14 +119,16 @@ public class FeatureExtractor<T extends AbstractData>{
 				}
 				previousData = currentData;
 			}
-		}	
-		if(isSelected) {
+		}
+		if(selectedItems==null) {
+			extractedDataMaps.add(data); 
+		}
+		else if(isSelected) {
 			extractedDataMaps.add(data); 
 		} else {
 			//negative example
 			double random = Math.random();
 			if(random<correctiveRatio) extractedDataMaps.add(data);
-
 		}
 	}
 	@SuppressWarnings("unchecked")
