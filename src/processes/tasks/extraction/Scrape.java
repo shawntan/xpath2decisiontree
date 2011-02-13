@@ -155,7 +155,7 @@ public class Scrape implements Task {
 		HtmlElement old = e;
 		e = replaceTable(e,p);
 		old.getParentNode().insertBefore(e,old);
-		//old.getParentNode().removeChild(e);
+		old.getParentNode().removeChild(old);
 		return e;
 	}
 
@@ -210,7 +210,9 @@ public class Scrape implements Task {
 					try {
 						page = webClient.getPage(url);
 						break;
-					} catch (IOException e) {}
+					} catch (IOException e) {
+						logger.log(Level.WARNING,"["+lastRevisionId+"]"+ e.getMessage() +" -> "+"Retry: "+(r+1));
+					}
 				}
 				if(page!=null) {
 					List<HtmlElement>[] selectedElements = (List<HtmlElement>[])new List[annotations.length];
@@ -221,7 +223,7 @@ public class Scrape implements Task {
 							buildBatchInsert(page, selectedElements)
 					);
 					logger.log(Level.INFO,"["+lastRevisionId+"] Done inserting..");
-				}
+				} else logger.log(Level.INFO, "["+lastRevisionId+"]"+"Giving up.");
 				page = null;
 			}
 			TaskExecutor.getInstance().queueTask(new Spider(extractor));
