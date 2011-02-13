@@ -142,7 +142,6 @@ public class FeatureExtractor<T extends AbstractData>{
 		((ClassifierData)data).setNode(body);	
 		data.setAttributeValues(globalAttributes);
 		extractFromDomNode(extractedDataMaps,data,body,null);
-
 	}
 
 	@SuppressWarnings("unchecked")

@@ -1,11 +1,8 @@
 package processes.tasks.extraction;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -13,7 +10,6 @@ import java.util.List;
 import learner.ElementClassifier;
 import main.Application;
 
-import org.apache.commons.dbutils.QueryRunner;
 
 
 import beans.Annotation;
@@ -23,7 +19,6 @@ import spider.Crawler;
 import utils.DataAccess;
 
 public class Spider implements Task {
-	private QueryRunner queryRunner;
 	private Extractor extractor;
 	private String[] startUrls;
 	
@@ -32,7 +27,6 @@ public class Spider implements Task {
 	
 	
 	public Spider(Extractor e) {
-		queryRunner = Application.getQueryRunner();
 		this.startUrls = e.getUrls();
 		List<Annotation> annotations = e.getAnnotations();
 		this.ids = new String[annotations.size()];
@@ -59,31 +53,7 @@ public class Spider implements Task {
 		
 		
 	}
-	private void loadClassifierModel(Extractor extractor) {
-		Connection con;
-		try {
-			con = Application.getDataSource().getConnection();
-			PreparedStatement pstmt = con.prepareStatement("SELECT cmodel FROM extractors WHERE id = ?");
-			pstmt.setInt(1,extractor.getId());
-			ResultSet rs = pstmt.executeQuery();
-			if(rs.next()) {
-				byte[] buf = rs.getBytes(1);
-				if (buf != null) {
-					ElementClassifier c = ElementClassifier.readElementClassifier(new ByteArrayInputStream(buf));
-					System.out.println(c);
-				}
-			}
-			rs.close();
-			pstmt.close();
-			con.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-	}
+
 	
 	
 	private void saveClassifierModel(ElementClassifier classifier) {
@@ -115,11 +85,6 @@ public class Spider implements Task {
 	@Override
 	public Task getFollowUpActions() {
 		return null;
-	}
-
-	@Override
-	public boolean isSuccessful() {
-		return false;
 	}
 
 }

@@ -14,13 +14,6 @@ public class TaskTester implements Task{
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
-	public boolean isSuccessful() {
-		// TODO Auto-generated method stub
-		return true;
-	}
-
 	@Override
 	public void run() {
 		System.out.println("TaskTester "+id +" RUNNING!");

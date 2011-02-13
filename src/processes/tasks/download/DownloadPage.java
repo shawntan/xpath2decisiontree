@@ -73,10 +73,6 @@ public class DownloadPage  implements Task{
 		this.page = page;
 		this.queryRunner = queryRunner;
 	}
-	@Override
-	public boolean isSuccessful() {
-		return successful;
-	}
 	private void makeAttributeFullyQualified(HtmlPage page,List<HtmlElement> list,String attributeName) {
 		for(HtmlElement n: list){
 			try {
