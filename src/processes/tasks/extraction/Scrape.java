@@ -168,7 +168,6 @@ public class Scrape implements Task {
 			DomNode n;
 			while(dom.hasNext()){
 				n = dom.next();
-				if(n instanceof HtmlElement) n = replaceTable((HtmlElement)n,p);
 				replacement.appendChild(n);
 			}
 		}
@@ -182,20 +181,33 @@ public class Scrape implements Task {
 		Iterator<HtmlElement> elements = page.getHtmlElementDescendants().iterator();
 		HtmlElement e;
 		Date timeNow = new Date();
-		while(elements.hasNext()) {
-			e = elements.next();
-			for(int j=0;j<selectedElements.length;j++) {
-				if(selectedElements[j].contains(e)){
-					e = processTag(e,page);
-					valuesToInsert.add(new Object[] {annotations[j].getId(),e.asXml(),timeNow,timeNow,lastRevisionId});
-					break;
-				}
-			}
-		}
+
+		traverseDOM(page.getBody(),selectedElements,valuesToInsert,page,timeNow);
+
 		Object[][] values = new Object[valuesToInsert.size()][valuesToInsert.get(0).length];
 		for(int j=0;j<values.length;j++) values[j] = valuesToInsert.get(j);
 		logger.log(Level.INFO,"["+lastRevisionId+"] Done building.");
 		return values;
+	}
+	private void traverseDOM(HtmlElement parent, List<HtmlElement>[] selectedElements, ArrayList<Object[]> valuesToInsert, HtmlPage page, Date timeNow) {
+		System.out.println(parent.getTagName());
+		DomNode e = parent.getFirstChild();
+		HtmlElement el = null;
+		if(e!=null) {
+			do {
+				if(e instanceof HtmlElement) {
+					el = (HtmlElement)e;
+					traverseDOM(el,selectedElements,valuesToInsert,page,timeNow);
+				}
+			}while((e=e.getNextSibling())!=null);
+		}
+		for(int j=0;j<selectedElements.length;j++) {
+			if(selectedElements[j].contains(parent)){
+				parent = processTag(parent,page);
+				valuesToInsert.add(new Object[] {annotations[j].getId(),parent.asXml(),timeNow,timeNow,lastRevisionId});
+				break;
+			}
+		}
 	}
 
 	public void run() {
@@ -203,12 +215,13 @@ public class Scrape implements Task {
 			reloadExtractor();
 			//HashMap<Integer, List<HtmlElement>> labelItems = new HashMap<Integer, List<HtmlElement>>(annotations.size());
 			if(lastRevisionId == -1) lastRevisionId = createRevision();
-			logger.log(Level.INFO,"["+lastRevisionId+"-"+Thread.currentThread().getName()+"] Revision created.");
+			logger.log(Level.INFO,"["+lastRevisionId+"-"+Thread.currentThread().getName()+"] Revision created. Downloading page...");
 			for(String url:urls) {
 				HtmlPage page = null;
 				for(int r=0;r<RETRIES;r++) {
 					try {
 						page = webClient.getPage(url);
+						logger.log(Level.INFO,"["+lastRevisionId+"-"+Thread.currentThread().getName()+"] Page downloaded.");
 						break;
 					} catch (IOException e) {
 						logger.log(Level.WARNING,"["+lastRevisionId+"]"+ e.getMessage() +" -> "+"Retry: "+(r+1));
@@ -217,7 +230,7 @@ public class Scrape implements Task {
 				if(page!=null) {
 					List<HtmlElement>[] selectedElements = (List<HtmlElement>[])new List[annotations.length];
 					for(int i=0;i<selectedElements.length;i++) selectedElements[i] = (List<HtmlElement>)page.getByXPath(annotations[i].getXpath());
-					logger.log(Level.INFO,"["+lastRevisionId+"] Done inserting data...");
+					logger.log(Level.INFO,"["+lastRevisionId+"] Done building data. Inserting...");
 					queryRunner.batch(
 							"INSERT INTO scraped_values (annotation_id,value,created_at,updated_at,revision_id) VALUES (?,?,?,?,?)",
 							buildBatchInsert(page, selectedElements)
