@@ -226,6 +226,7 @@ public class Scrape implements Task {
 					);
 					logger.log(Level.INFO,"["+lastRevisionId+"] Done inserting..");
 				}
+				page = null;
 			}
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, e.getMessage());
