@@ -17,6 +17,7 @@ import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 
 import processes.tasks.Task;
+import utils.WebClientFactory;
 
 import beans.Page;
 
@@ -29,7 +30,6 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 public class DownloadPage  implements Task{
 	private static List<String> failures = new LinkedList<String>();
 
-	private WebClient client;
 	protected Page page;
 	protected QueryRunner queryRunner;
 	private boolean successful;
@@ -51,7 +51,7 @@ public class DownloadPage  implements Task{
 	}
 
 
-	private HtmlPage getPage(String url) throws FailingHttpStatusCodeException, MalformedURLException, IOException{
+	private HtmlPage getPage(WebClient client,String url) throws FailingHttpStatusCodeException, MalformedURLException, IOException{
 		HtmlPage page = null;
 		try{
 			page = client.getPage(url);
@@ -62,14 +62,13 @@ public class DownloadPage  implements Task{
 		return page;
 	}
 
-	public HtmlPage getPageWithFullUrl(String url) throws FailingHttpStatusCodeException, MalformedURLException, IOException{ 
-		HtmlPage page = getPage(url);
+	public HtmlPage getPageWithFullUrl(WebClient client,String url) throws FailingHttpStatusCodeException, MalformedURLException, IOException{ 
+		HtmlPage page = getPage(client,url);
 		processUrls(page);
 		return page;
 	}
 
 	private void init(Page page,QueryRunner queryRunner) {
-		client = Application.getWebClient();
 		this.page = page;
 		this.queryRunner = queryRunner;
 	}
@@ -95,10 +94,10 @@ public class DownloadPage  implements Task{
 		}
 		return conn;
 	}
-	private HtmlPage downloadPage() {
+	private HtmlPage downloadPage(WebClient c) {
 		HtmlPage htmlPage=null;
 		try {
-			htmlPage = getPageWithFullUrl(page.getUrl());
+			htmlPage = getPageWithFullUrl(c,page.getUrl());
 		} catch (FailingHttpStatusCodeException e) {
 		} catch (MalformedURLException e) {
 		} catch (IOException e) {
@@ -123,13 +122,14 @@ public class DownloadPage  implements Task{
 
 	@Override
 	public void run() {
+		WebClient c = WebClientFactory.borrowClient();
 		Connection con = getConnection();
-		HtmlPage p = downloadPage();
+		HtmlPage p = downloadPage(c);
 		if(p!=null)
 			insertPage(con,p);
 		DbUtils.closeQuietly(con);
 		successful = true;
-
+		WebClientFactory.returnClient(c);
 	}
 
 }

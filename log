@@ -1,0 +1,48 @@
+J48 pruned tree
+------------------
+
+parent.Content.header = true: 26 (192.0)
+parent.Content.header = false
+|   Content.numericalOccurences <= 1: none (195.6)
+|   Content.numericalOccurences > 1
+|   |   parent.Content.tokens <= 4
+|   |   |   Content.tag = body: 27 (0.0)
+|   |   |   Content.tag = div: 27 (0.0)
+|   |   |   Content.tag = strong: 27 (70.0/3.0)
+|   |   |   Content.tag = a: 27 (0.0)
+|   |   |   Content.tag = img: 27 (0.0)
+|   |   |   Content.tag = hr: 27 (0.0)
+|   |   |   Content.tag = form: 27 (0.0)
+|   |   |   Content.tag = fieldset: 27 (0.0)
+|   |   |   Content.tag = legend: 27 (0.0)
+|   |   |   Content.tag = label: 27 (0.0)
+|   |   |   Content.tag = p: 27 (0.0)
+|   |   |   Content.tag = input: 27 (0.0)
+|   |   |   Content.tag = button: 27 (0.0)
+|   |   |   Content.tag = span: none (5.0)
+|   |   |   Content.tag = em: 27 (0.0)
+|   |   |   Content.tag = select: 27 (0.0)
+|   |   |   Content.tag = option: 27 (0.0)
+|   |   |   Content.tag = table: 27 (0.0)
+|   |   |   Content.tag = caption: 27 (0.0)
+|   |   |   Content.tag = thead: 27 (0.0)
+|   |   |   Content.tag = tr: 27 (0.0)
+|   |   |   Content.tag = th: 27 (0.0)
+|   |   |   Content.tag = tfoot: 27 (0.0)
+|   |   |   Content.tag = td: 27 (0.0)
+|   |   |   Content.tag = tbody: 27 (0.0)
+|   |   |   Content.tag = h1: 27 (0.0)
+|   |   |   Content.tag = h2: 27 (0.0)
+|   |   |   Content.tag = ul: 27 (0.0)
+|   |   |   Content.tag = li: 27 (0.0)
+|   |   |   Content.tag = h4: 27 (0.0)
+|   |   |   Content.tag = h3: 27 (0.0)
+|   |   parent.Content.tokens > 4: none (55.4)
+
+Number of Leaves  : 	34
+
+Size of the tree : 	38
+
+Book search for godel, escher, bach - page 1 - at The Book Depository
+dataList size:828
+No. of Attributes: 3565

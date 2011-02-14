@@ -28,9 +28,9 @@ public class Spider implements Task {
 	
 	public Spider(Extractor e) {
 		this.startUrls = e.getUrls();
-		List<Annotation> annotations = e.getAnnotations();
-		this.ids = new String[annotations.size()];
-		this.xpaths = new String[annotations.size()];
+		Annotation[] annotations = e.getAnnotations();
+		this.ids = new String[annotations.length];
+		this.xpaths = new String[annotations.length];
 		this.extractor = e;
 		int i = 0;
 		for(Annotation a:annotations){

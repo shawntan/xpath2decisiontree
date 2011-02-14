@@ -27,6 +27,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import processes.TaskExecutor;
 import processes.TaskScheduler;
 import processes.tasks.Task;
+import utils.WebClientFactory;
 
 
 public class Scrape implements Task {
@@ -50,11 +51,9 @@ public class Scrape implements Task {
 
 	private String[] urls;
 	private Annotation[] annotations;
-	private WebClient webClient;
 
 	public Scrape(Extractor extractor){
 		this.queryRunner = Application.getQueryRunner();
-		this.webClient = Application.getWebClient();
 		this.extractor = extractor;
 	}
 
@@ -111,10 +110,11 @@ public class Scrape implements Task {
 	}
 	
 	public void run() {
+		WebClient webClient = WebClientFactory.borrowClient();
 		try {
+			
 			reloadExtractor();
 			//HashMap<Integer, List<HtmlElement>> labelItems = new HashMap<Integer, List<HtmlElement>>(annotations.size());
-			
 			logger.log(Level.INFO,"Starting scheduled download for extractor...");
 			int revisionId = -1;
 			ArrayList<Object[]> valuesToInsert = new ArrayList<Object[]>();
@@ -144,6 +144,7 @@ public class Scrape implements Task {
 		} catch (FailingHttpStatusCodeException e) {
 			logger.log(Level.WARNING, e.getMessage());
 		}
+		WebClientFactory.returnClient(webClient);
 	}
 
 

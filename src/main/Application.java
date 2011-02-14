@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -17,6 +18,8 @@ import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.pool.ObjectPool;
+import org.apache.commons.pool.impl.StackObjectPool;
 
 import processes.TaskExecutor;
 import processes.TaskScheduler;
@@ -24,6 +27,7 @@ import processes.tasks.ScheduledTask;
 import processes.tasks.Task;
 import processes.tasks.download.PeriodicDownload;
 import processes.tasks.extraction.ScheduledScrape;
+import utils.WebClientFactory;
 
 import beans.Extractor;
 
@@ -44,16 +48,15 @@ public class Application {
 	final private static String DATABASE_USER = "databaseUser";
 	private static DataSource dataSource;
 	final private static String HTTP_SERVER_PORT = "httpServerPort";
-	private static HttpServer httpServer;
 	
 	private static QueryRunner queryRunner;
 	private static Properties settings;
 	final private static String SETTINGS_FILE="settings.properties";
-	private static TaskExecutor taskExecutor;
-	private static TaskScheduler taskScheduler;
 	final private static String THREAD_POOL_SIZE = "threadPoolSize";
-	private static WebClient webClient;
-	
+	private static ObjectPool webClientPool;
+	private static HttpServer httpServer;
+	private static TaskScheduler taskScheduler;
+	private static TaskExecutor taskExecutor;
 	
 	public static void main(String[] args) throws SQLException {
 		loadSettings();
@@ -90,34 +93,8 @@ public class Application {
 		}
 		return queryRunner;
 	}
-	public static WebClient getWebClient() {
-		LogFactory.getFactory().setAttribute("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog"); 
-		BrowserVersion version = new BrowserVersion(
-				"Mozilla",
-				"5.0 (X11; en-US)",
-				"Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.13) Gecko/20101211 Firefox/3.5.2",
-				5.0f);
-		
-		WebClient webClient = new WebClient(version);
-		webClient.setAjaxController(new NicelyResynchronizingAjaxController());
-		webClient.setJavaScriptEnabled(false);
-		//webClient.setRefreshHandler(new WaitingRefreshHandler());
-		webClient.setCssErrorHandler(new SilentCssErrorHandler());
-		webClient.setThrowExceptionOnScriptError(false);
-		webClient.setJavaScriptTimeout(3000);
-		webClient.setTimeout(10000);
-		webClient.setHTMLParserListener(null);
-		return webClient;
-	}
-	private static void initializeClient() {
-		webClient = new WebClient(BrowserVersion.FIREFOX_3);
-		webClient.setAjaxController(new NicelyResynchronizingAjaxController());
-		webClient.setJavaScriptEnabled(false);
-		//webClient.setRefreshHandler(new WaitingRefreshHandler());
-		webClient.setCssErrorHandler(new SilentCssErrorHandler());
-		webClient.setJavaScriptTimeout(3000);
-		webClient.setTimeout(10000);
-	}
+
+
 	
 
 	

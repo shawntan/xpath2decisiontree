@@ -22,23 +22,22 @@ import beans.Annotation;
 import beans.Extractor;
 import processes.tasks.Task;
 import utils.DataAccess;
+import utils.WebClientFactory;
 
 public class FallbackScrape implements Task {
 	ElementClassifier classifier;
 	Extractor extractor;
-	WebClient client;
 	QueryRunner queryRunner;
 
 	public FallbackScrape(Extractor extractor){
 		this.extractor = extractor;
 		this.classifier = loadClassifierModel(extractor);
-		this.client = Application.getWebClient();
 		this.queryRunner = Application.getQueryRunner();
-		this.client = Application.getWebClient();
 	}
 
 	public void run() {
 		if(this.classifier==null) return;
+		WebClient client =  WebClientFactory.borrowClient();
 		String[] urls = extractor.getUrls();
 		final ArrayList<Object[]> valuesToInsert = new ArrayList<Object[]>();
 		final Date timeNow = new Date();
@@ -76,6 +75,7 @@ public class FallbackScrape implements Task {
 		} catch (SQLException e1) {
 			e1.printStackTrace();
 		}
+		WebClientFactory.returnClient(client);
 	}
 
 	@Override

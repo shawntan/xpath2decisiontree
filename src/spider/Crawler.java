@@ -18,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import utils.WebClientFactory;
 import weka.classifiers.Classifier;
 
 
@@ -68,11 +69,12 @@ public class Crawler implements Serializable {
 	
 	public Crawler() {
 		Application.loadSettings();
-		client = Application.getWebClient();
-		client.setTimeout(3000);
+
 	}
 	
 	public ElementClassifier startCrawl(String[] startUrls,String[] labels, String[] xpaths, int depth) throws MalformedURLException {
+		this.client = WebClientFactory.borrowClient();
+		this.client.setTimeout(3000);
 		this.xpaths 		= xpaths;
 		this.startUrls		= new URL[startUrls.length];	
 		this.learner 		= new Learner(labels,xpaths);
@@ -89,6 +91,7 @@ public class Crawler implements Serializable {
 		
 		//Think about this. Needed?
 		logger.log(Level.INFO,"Creating classifier...");
+		WebClientFactory.returnClient(this.client);
 		return learner.createClassifier();
 	}
 
