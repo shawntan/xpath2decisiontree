@@ -34,6 +34,7 @@ import com.steadystate.css.dom.Property;
 
 import spider.Crawler;
 import spider.Page;
+import utils.WebClientFactory;
 
 public class SerializeTest {
 
@@ -43,7 +44,7 @@ public class SerializeTest {
 				"parcels_highlight"
 		};
 
-		WebClient client = Application.getWebClient();
+		WebClient client = WebClientFactory.borrowClient();
 		HtmlPage sampleHtmlPage;
 		try {
 			sampleHtmlPage = client.getPage("http://www.google.com.sg/search?q=HtmlUnit+logging&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a");
@@ -77,7 +78,7 @@ public class SerializeTest {
 			Transformer xformer = TransformerFactory.newInstance().newTransformer();
 			xformer.setOutputProperty(OutputKeys.INDENT, "yes");
 			xformer.transform(source, resultSource);
-
+			WebClientFactory.returnClient(client);
 		} catch (Exception e){
 			e.printStackTrace();
 		}

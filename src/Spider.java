@@ -24,6 +24,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 import spider.Crawler;
 import spider.Page;
+import utils.WebClientFactory;
 
 public class Spider {
 
@@ -32,9 +33,15 @@ public class Spider {
 		try {
 			
 			String url		= 	
-					"http://www.google.com.sg/search?q=HtmlUnit+logging&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a";
+					"http://www.google.com.sg/" +
+					"search?" +
+					"q=HtmlUnit+logging" +
+					"&ie=utf-8&oe=utf-8" +
+					"&aq=t" +
+					"&rls=org.mozilla:en-US:official" +
+					"&client=firefox-a";
 			
-			WebClient client = Application.getWebClient();
+			WebClient client = WebClientFactory.borrowClient();
 			HtmlPage page = client.getPage(url);
 			List<HtmlElement> scripts = (List<HtmlElement>) page.getByXPath("//script");
 			for(HtmlElement s: scripts) s.getParentNode().removeChild(s);
@@ -95,7 +102,7 @@ public class Spider {
 
 				}
 			}
-
+			WebClientFactory.returnClient(client);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (FailingHttpStatusCodeException e) {
@@ -105,6 +112,7 @@ public class Spider {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
+		
 	}
 
 	private static void makeAttributeFullyQualified(HtmlPage page,List<HtmlElement> list,String attributeName) {
