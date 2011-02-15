@@ -51,7 +51,7 @@ public class Spider implements Task {
 			e.printStackTrace();
 		}
 		
-		
+		System.gc();
 	}
 
 	

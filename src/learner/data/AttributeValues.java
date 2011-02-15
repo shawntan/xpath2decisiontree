@@ -2,7 +2,6 @@ package learner.data;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,6 +17,8 @@ import com.gargoylesoftware.htmlunit.html.DomNode;
 
 
 public class AttributeValues extends HashMap<String, AttributeValues.AttributeValuePair> implements Serializable{
+	private static final long serialVersionUID = 1L;
+	
 	ArrayList<Attribute> attributeList;
 	private String[] labels;
 	
@@ -32,48 +33,18 @@ public class AttributeValues extends HashMap<String, AttributeValues.AttributeVa
 			else return "NUMERIC";
 		}
 	}
+	
 	final static public ArrayList<String>  booleanValues = new ArrayList<String>();
-	private static final long serialVersionUID = 1L;
+	
 
 	final static public List<String> tagNames = new ArrayList<String>();
 	static {
 		tagNames.add("body");
 	}
-
 	static {
 		booleanValues.add(Boolean.TRUE.toString());
 		booleanValues.add(Boolean.FALSE.toString());
 	}
-	public static String stringify (Serializable value) {
-		if(value instanceof DomNode) {
-			return ((DomNode)value).getLocalName().toLowerCase();
-		}
-		else if (value instanceof Boolean) {
-			return value.toString();
-		}
-		else if (value instanceof String) {
-			return (String)value;
-		}
-		return null;
-	}
-
-
-
-
-
-	public AttributeValues(String[] labels) {
-		List<String> values = new ArrayList<String>(labels.length+1);
-		Collections.addAll(values,labels);
-		values.add(FeatureExtractor.CLASS_ATTRIBUTE_NIL_VALUE);
-		System.out.println(values.get(values.size()-1));
-		AttributeValuePair avp = new AttributeValuePair();
-		avp.values = values;
-		super.put(FeatureExtractor.CLASS_ATTRIBUTE,avp);
-		this.labels = labels;
- 	}
-
-
-
 	private void addWithNoRepeat(List<String> values,String value) {
 		if(values==null || value == null) return;
 		if(!values.contains(value)) values.add(value);
@@ -124,6 +95,30 @@ public class AttributeValues extends HashMap<String, AttributeValues.AttributeVa
 			addWithNoRepeat(attributeValues, stringify(entry.getValue()));
 		}
 	}
+	public AttributeValues(String[] labels) {
+		List<String> values = new ArrayList<String>(labels.length+1);
+		Collections.addAll(values,labels);
+		values.add(FeatureExtractor.CLASS_ATTRIBUTE_NIL_VALUE);
+		System.out.println(values.get(values.size()-1));
+		AttributeValuePair avp = new AttributeValuePair();
+		avp.values = values;
+		super.put(FeatureExtractor.CLASS_ATTRIBUTE,avp);
+		this.labels = labels;
+	}
+
+	public static String stringify (Serializable value) {
+		if(value instanceof DomNode) {
+			return ((DomNode)value).getLocalName().toLowerCase();
+		}
+		else if (value instanceof Boolean) {
+			return value.toString();
+		}
+		else if (value instanceof String) {
+			return (String)value;
+		}
+		return null;
+	}
+
 	public Attribute getAttribute(String key) {
 		AttributeValuePair value = super.get(key);
 		if(value!=null){
@@ -209,6 +204,5 @@ public class AttributeValues extends HashMap<String, AttributeValues.AttributeVa
 	public String[] getLabels() {
 		return labels;
 	}
-
 }
 

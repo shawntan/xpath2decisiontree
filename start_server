@@ -5,7 +5,7 @@ if [ -e ".pid" ]; then
 fi
 echo "Starting server..."
 
-exec java -Xms2048m -Xmx2048m -Dfile.encoding=UTF-8 \
+exec java -Xms500m -Xmx1200m -Dfile.encoding=UTF-8 \
 -classpath \
 ./bin:\
 ./lib/* \

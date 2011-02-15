@@ -124,6 +124,10 @@ public class Scrape implements Task {
 					List<HtmlElement>[] selectedElements = (List<HtmlElement>[])new List[annotations.length];
 					for(int i=0;i<selectedElements.length;i++){
 						selectedElements[i] = (List<HtmlElement>)page.getByXPath(annotations[i].getXpath());
+						if(selectedElements[i].size()==0){
+							logger.log(Level.WARNING,"XPath failed.");
+							return;
+						}
 						//insert failure code here.
 					}
 					revisionId = (revisionId == -1)?ScrapeHelper.createRevision(extractor):revisionId;
@@ -133,18 +137,20 @@ public class Scrape implements Task {
 			}
 			Object[][] values = new Object[valuesToInsert.size()][valuesToInsert.get(0).length];
 			for(int j=0;j<values.length;j++) values[j] = valuesToInsert.get(j);
-			logger.log(Level.INFO," Done building data. Inserting...");
+			logger.log(Level.INFO,"["+revisionId+"]"+" Inserting...");
 			queryRunner.batch(
 					"INSERT INTO scraped_values (annotation_id,value,created_at,updated_at,revision_id) VALUES (?,?,?,?,?)",
 					values
 			);
-			//TODO:TaskExecutor.getInstance().queueTask(new Spider(extractor));
+			logger.log(Level.INFO,"["+revisionId+"]"+" Done.");
+			TaskExecutor.getInstance().queueTask(new Spider(extractor));
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, e.getMessage());
 		} catch (FailingHttpStatusCodeException e) {
 			logger.log(Level.WARNING, e.getMessage());
 		}
 		WebClientFactory.returnClient(webClient);
+		System.gc();
 	}
 
 
