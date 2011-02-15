@@ -35,7 +35,6 @@ public class WebClientFactory extends BasePoolableObjectFactory {
 		webClient.setJavaScriptEnabled(false);
 		webClient.setCssErrorHandler(cssErrorHandler);
 		webClient.setThrowExceptionOnScriptError(false);
-		webClient.setJavaScriptTimeout(3000);
 		webClient.setTimeout(10000);
 		webClient.setHTMLParserListener(null);
 		return webClient;

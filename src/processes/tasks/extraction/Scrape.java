@@ -2,7 +2,6 @@ package processes.tasks.extraction;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.FileHandler;

@@ -21,6 +21,7 @@ public class AttributeValues extends HashMap<String, AttributeValues.AttributeVa
 	
 	ArrayList<Attribute> attributeList;
 	private String[] labels;
+	transient private StringBuffer sb;
 	
 	protected class AttributeValuePair implements Serializable {
 		Attribute attribute;
@@ -81,7 +82,9 @@ public class AttributeValues extends HashMap<String, AttributeValues.AttributeVa
 		Set<Map.Entry<String, Serializable>> subData = data.entrySet();
 		for(Map.Entry<String, Serializable> entry: subData) {
 			if(entry.getValue() instanceof LearnerData) continue;
-			String fullKey = key + "." + entry.getKey();
+			if(sb==null) sb = new StringBuffer(key.length()+entry.getKey().length()+1);
+			String fullKey = sb.append(key).append(".").append(entry.getKey()).toString();
+			sb.setLength(0);
 			List<String> attributeValues = null;
 			if(containsKey(fullKey)) {
 				attributeValues = super.get(fullKey).values;

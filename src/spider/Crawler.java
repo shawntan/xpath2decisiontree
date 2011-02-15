@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +80,7 @@ public class Crawler implements Serializable {
 		this.startUrls		= new URL[startUrls.length];	
 		this.learner 		= new Learner(labels,xpaths);
 		this.downloadQueue 	= new PriorityQueue<Page>();
-		this.visited 		= new TreeMap<String,Page>(); 
+		this.visited 		= new HashMap<String,Page>(); 
 		this.wantedPages 	= new HashSet<Page>();
 		for(int i=0;i<startUrls.length;i++){
 			this.startUrls[i]=new URL(startUrls[i]);

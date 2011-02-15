@@ -61,8 +61,8 @@ public class Spider implements Task {
 		try {
 			con = Application.getDataSource().getConnection();
 			PreparedStatement pstmt = con.prepareStatement("UPDATE extractors SET cmodel = ? WHERE id = ?");
-			pstmt.setObject(	1, classifier);
-			pstmt.setInt(		2, extractor.getId());
+			pstmt.setObject	(1, classifier);
+			pstmt.setInt	(2, extractor.getId());
 			System.out.println(pstmt);
 			pstmt.executeUpdate();
 			pstmt.close();
