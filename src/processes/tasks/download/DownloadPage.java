@@ -37,18 +37,6 @@ public class DownloadPage  implements Task{
 	public DownloadPage(Page page,QueryRunner queryRunner) {
 		init(page, queryRunner);
 	}
-	@Override
-	public Task getFollowUpActions() {
-		return new Task() {
-			public Task getFollowUpActions() {return null;}
-			public boolean isSuccessful() {
-				return true;
-			}
-			public void run() {
-				DownloadPage.failures.add(page.getUrl());
-			}
-		};
-	}
 
 
 	private HtmlPage getPage(WebClient client,String url) throws FailingHttpStatusCodeException, MalformedURLException, IOException{

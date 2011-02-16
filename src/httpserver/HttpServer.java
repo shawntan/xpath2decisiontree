@@ -12,6 +12,8 @@ import java.net.URLDecoder;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
 
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
@@ -19,32 +21,31 @@ import org.simpleframework.http.core.Container;
 import org.simpleframework.transport.connect.Connection;
 import org.simpleframework.transport.connect.SocketConnection;
 
-public class HttpServer implements Container{
-	public static void main(String[] args) {
-		new HttpServer(8080,"controllers");
-	}
-	private Map<String,Method> actionsMap;
+import utils.Utils;
 
+public class HttpServer implements Container{
+	private Map<String,Method> actionsMap;
 	private String controllerPackage;
 	private Map<String,Object> instanceMap;
-
 	private int port;
+	private Logger logger;
+	
 	public HttpServer(int port, String controllerPackage) {
 		super();
 		this.port = port;
 		this.controllerPackage = controllerPackage;
-
-		actionsMap = new HashMap<String, Method>();
-		instanceMap= new HashMap<String, Object>();
+		this.actionsMap = new HashMap<String, Method>();
+		this.instanceMap= new HashMap<String, Object>();
+		this.logger = Utils.createLogger("httpserver");
+		
+		
 		try {
 			loadClasses(controllerPackage);
 			startHttpServer();
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warning("Server I/O issues?");
 		}
 	}
 	/**
@@ -88,7 +89,7 @@ public class HttpServer implements Container{
 							String fullroute = (controllerRoute+"/"+m.getName()).toLowerCase();
 							actionsMap.put(fullroute, m);
 							instanceMap.put(fullroute, instance);
-							System.out.println(fullroute);
+							logger.info("Added to route: "+fullroute);
 						}
 					}
 				} catch (InstantiationException e) {
@@ -111,7 +112,7 @@ public class HttpServer implements Container{
 	public void handle(Request request, Response response) {
 		try {
 			String actionTarget = request.getPath().toString().toLowerCase();
-			System.out.println(request.getAddress());
+			logger.info(request.getAddress().toString());
 			Map query = request.getQuery();
 			Object controller = instanceMap.get(actionTarget);
 			if(controller == null) {
@@ -125,16 +126,9 @@ public class HttpServer implements Container{
 				out.close();
 			} catch(NullPointerException e){
 				response.setCode(404);
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				response.setCode(500);
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				response.setCode(500);
-				e.printStackTrace();
-			} catch (InvocationTargetException e) {
-				response.setCode(500);
-				e.printStackTrace();
+				logger.info("Couldn't find appropriate class to map to.");
+			} catch (Exception e){
+				logger.info("An error has occured in routing.");
 			}
 
 		} catch (IOException e1) {
@@ -178,6 +172,6 @@ public class HttpServer implements Container{
 		Connection connection = new SocketConnection(this);
 		SocketAddress address = new InetSocketAddress(getPort());
 		connection.connect(address);
-		System.out.println("Httpserver started.");
+		logger.info("Httpserver started.");
 	}
 }

@@ -8,12 +8,13 @@ import java.util.Map;
 
 import org.apache.commons.dbutils.handlers.BeanHandler;
 
+import database.DataAccess;
+
 
 import beans.Extractor;
 
 import processes.TaskScheduler;
 import processes.tasks.ScheduledTask;
-import utils.DataAccess;
 
 
 
@@ -82,6 +83,7 @@ public class ScheduledScrape extends Scrape implements ScheduledTask {
 		} else {
 			s = new ScheduledScrape(DataAccess.retrieveExtractor(extractorId));
 		}
+		s.scheduleNextTime(false);
 		TaskScheduler.getInstance().scheduleTask(s);
 	}
 }

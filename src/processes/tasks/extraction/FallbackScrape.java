@@ -15,13 +15,14 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
+import database.DataAccess;
+
 import learner.ClassifiedTask;
 import learner.ElementClassifier;
 import main.Application;
 import beans.Annotation;
 import beans.Extractor;
 import processes.tasks.Task;
-import utils.DataAccess;
 import utils.WebClientFactory;
 
 public class FallbackScrape implements Task {
@@ -78,11 +79,6 @@ public class FallbackScrape implements Task {
 		WebClientFactory.returnClient(client);
 	}
 
-	@Override
-	public Task getFollowUpActions() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	private ElementClassifier loadClassifierModel(Extractor extractor) {
 		Connection con = null;

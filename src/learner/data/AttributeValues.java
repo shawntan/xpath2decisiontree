@@ -102,7 +102,6 @@ public class AttributeValues extends HashMap<String, AttributeValues.AttributeVa
 		List<String> values = new ArrayList<String>(labels.length+1);
 		Collections.addAll(values,labels);
 		values.add(FeatureExtractor.CLASS_ATTRIBUTE_NIL_VALUE);
-		System.out.println(values.get(values.size()-1));
 		AttributeValuePair avp = new AttributeValuePair();
 		avp.values = values;
 		super.put(FeatureExtractor.CLASS_ATTRIBUTE,avp);

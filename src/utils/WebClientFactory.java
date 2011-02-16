@@ -18,7 +18,6 @@ public class WebClientFactory extends BasePoolableObjectFactory {
 	private static ObjectPool webClientPool;
 	public WebClientFactory() {
 		LogFactory.getFactory().setAttribute("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
-		
 		this.ajaxController = new NicelyResynchronizingAjaxController();
 		this.cssErrorHandler = new SilentCssErrorHandler();
 	}

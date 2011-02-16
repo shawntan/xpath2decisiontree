@@ -1,19 +1,25 @@
 package database;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+
+import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 
+import utils.Utils;
+
 
 public class Database {
 	private static Database instance;
+	private String host;
+	private String password;
+	private int port;
+	private String schema;
+	private String url;
+	private String username;
+	static Logger logger;
+
 	public static Database getInstance(String host,int port,String schema,String username, String password) throws ClassNotFoundException {
 		if(instance == null) {
 			Class.forName("com.mysql.jdbc.Driver");
@@ -24,18 +30,12 @@ public class Database {
 			instance.username = username;
 			instance.password = password;
 			instance.url = "jdbc:mysql://"+host+":"+port+"/"+schema;
+			instance.logger = Utils.createLogger("database");
 		}
 		return instance;
 	}
 	
-	private String host;
-	private PrintWriter logWriter;
-	private String password;
-	private int port;
-	private String schema;
 
-	private String url;
-	private String username;
 
 	private Database() {
 	}
@@ -45,19 +45,6 @@ public class Database {
 		bds.setUsername(this.username);
 		bds.setPassword(this.password);
 		bds.setUrl(this.url);
-		try {
-			
-			bds.setLogAbandoned(false);
-			bds.setLogWriter(new PrintWriter(new File("db.log")));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		return bds;
 	}
-
-
-
 }

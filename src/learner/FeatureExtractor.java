@@ -63,7 +63,6 @@ public class FeatureExtractor<T extends AbstractData>{
 
 	public Instances createTrainingSet(String name,List<T> extractedDataMaps) {
 		ArrayList<Attribute> attributeList =  globalAttributes.getAttributeList();
-		System.out.println("No. of Attributes: "+attributeList.size());
 		Instances trainingSet = new Instances(
 				"Training Data",
 				attributeList,
@@ -168,7 +167,6 @@ public class FeatureExtractor<T extends AbstractData>{
 		};
 		data.setAttributeValues(globalAttributes);
 		extractFromDomNode(extractedDataMaps,data,body,selectedItems);
-		System.out.println("Size of dataset: "+extractedDataMaps.size());
 	}
 	private int fillInstanceWithData(Instance instance,ArrayList<Attribute> attributeList,String prefix,AbstractData data){
 		Set<Map.Entry<String,Serializable>> entries = data.entrySet();

@@ -25,28 +25,14 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import processes.TaskExecutor;
 
 import processes.tasks.Task;
+import utils.Utils;
 import utils.WebClientFactory;
 
 
 public class Scrape implements Task {
-	private static Logger logger;
-	static {
-		try {
-			logger = Logger.getLogger("scraper");
-			FileHandler fh = new FileHandler("scrape.log");
-			SimpleFormatter formatter = new SimpleFormatter();
-			fh.setFormatter(formatter);
-			logger.addHandler(fh);
-		} catch (Exception e) {	e.printStackTrace();}
-	}
-
-
+	private static Logger logger = Utils.createLogger("scraper");;
 	Extractor extractor;
-
-
-
 	QueryRunner queryRunner;
-
 	private String[] urls;
 	private Annotation[] annotations;
 
@@ -55,11 +41,6 @@ public class Scrape implements Task {
 		this.extractor = extractor;
 	}
 
-	@Override
-	public Task getFollowUpActions() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 	private void reloadExtractor() throws SQLException {
 		List<Annotation> annotationList = queryRunner.query(
 				"SELECT id,xpath FROM annotations WHERE extractor_id = ?",
@@ -106,33 +87,38 @@ public class Scrape implements Task {
 			}
 		}
 	}
-	
+
 	public void run() {
 		WebClient webClient = WebClientFactory.borrowClient();
 		try {
-			
+
 			reloadExtractor();
 			//HashMap<Integer, List<HtmlElement>> labelItems = new HashMap<Integer, List<HtmlElement>>(annotations.size());
 			logger.log(Level.INFO,"Starting scheduled download for extractor...");
 			int revisionId = -1;
 			ArrayList<Object[]> valuesToInsert = new ArrayList<Object[]>();
 			for(String url:urls) {
+				boolean pass = true;
 				HtmlPage page = ScrapeHelper.downloadPage(url,webClient,logger);
-				if(page!=null) {
-					List<HtmlElement>[] selectedElements = (List<HtmlElement>[])new List[annotations.length];
-					for(int i=0;i<selectedElements.length;i++){
-						selectedElements[i] = (List<HtmlElement>)page.getByXPath(annotations[i].getXpath());
-						if(selectedElements[i].size()==0){
-							logger.log(Level.WARNING,"XPath failed.");
-							return;
-						}
-						//insert failure code here.
-					}
+				if(page==null){
+					logger.log(Level.INFO, url+" giving up.");
+					continue;
+				}
+				List<HtmlElement>[] selectedElements = (List<HtmlElement>[])new List[annotations.length];
+				for(int i=0;i<selectedElements.length;i++){
+					selectedElements[i] = (List<HtmlElement>)page.getByXPath(annotations[i].getXpath());
+					if(selectedElements[i].size()==0) pass = false;
+					//insert failure code here.
+				}
+				if(!pass) {
+					logger.warning("An error occured while downloading.");
+					return;
+				} else {
 					revisionId = (revisionId == -1)?ScrapeHelper.createRevision(extractor):revisionId;
 					buildBatchInsert(revisionId,page, selectedElements,valuesToInsert);
-				} else logger.log(Level.INFO, "["+revisionId+"]"+"Giving up.");
-				page = null;
+				}
 			}
+			
 			Object[][] values = new Object[valuesToInsert.size()][valuesToInsert.get(0).length];
 			for(int j=0;j<values.length;j++) values[j] = valuesToInsert.get(j);
 			logger.log(Level.INFO,"["+revisionId+"]"+" Inserting...");

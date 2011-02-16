@@ -10,11 +10,6 @@ public class TaskTester implements Task{
 	}
 	
 	@Override
-	public Task getFollowUpActions() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	@Override
 	public void run() {
 		System.out.println("TaskTester "+id +" RUNNING!");
 		try {

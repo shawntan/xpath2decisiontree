@@ -34,7 +34,6 @@ public class Learner {
 		J48 cModel = new J48();
 		try {
 			cModel.buildClassifier(trainingSet);
-			System.out.println(cModel.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -10,6 +10,10 @@ import processes.tasks.Task;
 
 public class TaskExecutor {
 	private static TaskExecutor taskExecutor;
+
+    private BlockingQueue<Runnable> queue;
+    private ThreadPoolExecutor threadPool;
+  
 	public static TaskExecutor getInstance(){
     	return getInstance(3,5,1000L);
     }
@@ -19,25 +23,16 @@ public class TaskExecutor {
     	}
     	return taskExecutor;
     }
-	private long keepAliveTime;
-    private int maxPoolSize;
-    private int poolSize;
-    
-    private BlockingQueue<Runnable> queue;
-    private ThreadPoolExecutor threadPool;
-  
+	
     private TaskExecutor(int poolSize, int maxPoolSize, long keepAliveTime) {
 		super();
-		this.poolSize = poolSize;
-		this.maxPoolSize = maxPoolSize;
-		this.keepAliveTime = keepAliveTime;
+
 		queue = new LinkedBlockingQueue<Runnable>();
-		
 		threadPool = new ThreadPoolExecutor(
 				poolSize,
 				maxPoolSize,
 				keepAliveTime,
-				TimeUnit.HOURS,
+				TimeUnit.DAYS,
 				queue
 		);
 	}

@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
+import database.DataAccess;
+
 import learner.ElementClassifier;
 import main.Application;
 
@@ -16,7 +18,6 @@ import beans.Annotation;
 import beans.Extractor;
 import processes.tasks.Task;
 import spider.Crawler;
-import utils.DataAccess;
 
 public class Spider implements Task {
 	private Extractor extractor;
@@ -82,9 +83,5 @@ public class Spider implements Task {
 		s.run();
 	}
 	
-	@Override
-	public Task getFollowUpActions() {
-		return null;
-	}
 
 }

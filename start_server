@@ -9,4 +9,4 @@ exec java -Xms500m -Xmx1200m -Dfile.encoding=UTF-8 \
 -classpath \
 ./bin:\
 ./lib/* \
-main.Application > server.log & echo $! > .pid
+main.Application > /dev/null & echo $! > .pid

@@ -8,6 +8,8 @@ import java.util.Map;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 
+import database.DataAccess;
+
 import beans.Extractor;
 
 import main.Application;
@@ -15,7 +17,6 @@ import main.Application;
 import processes.TaskExecutor;
 import processes.tasks.extraction.ScheduledScrape;
 import processes.tasks.extraction.Scrape;
-import utils.DataAccess;
 
 public class Extract{
 	public void extract(Map<String,String> request, PrintStream out) {

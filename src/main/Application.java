@@ -106,7 +106,7 @@ public class Application {
 			settings.load(new FileInputStream(settingsFile));
 		} catch (FileNotFoundException e) {
 		} catch (IOException e) {
-			System.out.println("File error has occured.");
+			System.out.println("Could not load settings file.");
 			System.out.println(e.getMessage());
 		}
 	}
