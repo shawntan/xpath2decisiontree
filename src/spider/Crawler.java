@@ -36,7 +36,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 
 public class Crawler implements Serializable {
-	
+	final private static int CRAWL_LIMIT = 100;
 	
 	//Required tools
 	private WebClient client;
@@ -97,6 +97,7 @@ public class Crawler implements Serializable {
 	}
 
 	private void crawl(){
+		int crawled = 0;
 		while(!downloadQueue.isEmpty() && !stopCrawling){
 			Page p = downloadQueue.poll();
 			try {
@@ -107,6 +108,7 @@ public class Crawler implements Serializable {
 						" Downloading "+p.getUrl().toString()
 				);
 				HtmlPage htmlPage = client.getPage(p.getUrl());
+				crawled++;
 				p.setHtmlPage(htmlPage);
 				processPage(p);
 			} catch (FailingHttpStatusCodeException e) {
@@ -116,6 +118,7 @@ public class Crawler implements Serializable {
 			} catch (ClassCastException e) {
 				logger.log(Level.WARNING,"Not HTML.");
 			}
+			if(crawled>=CRAWL_LIMIT);
 		}
 		logger.log(Level.INFO,"Done crawling");
 	}
