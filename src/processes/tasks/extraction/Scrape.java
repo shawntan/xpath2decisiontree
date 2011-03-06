@@ -127,7 +127,7 @@ public class Scrape implements Task {
 					values
 			);
 			logger.log(Level.INFO,"["+revisionId+"]"+" Done.");
-			TaskExecutor.getInstance().queueTask(new Spider(extractor));
+			//TaskExecutor.getInstance().queueTask(new Spider(extractor));
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, e.getMessage());
 		} catch (FailingHttpStatusCodeException e) {
